@@ -1,0 +1,106 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(9, 30, 66, 0.54);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal {
+  background: white;
+  border-radius: 3px;
+  box-shadow: 0 20px 32px -8px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.2s cubic-bezier(0.15, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.drawer {
+  background: white;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 32px -8px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+  display: flex;
+  flex-direction: column;
+  animation: slideLeft 0.2s cubic-bezier(0.15, 1, 0.3, 1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-5) var(--spacing-5) var(--spacing-2);
+  border-bottom: none;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-neutral-900);
+}
+
+.closeButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-neutral-500);
+  padding: var(--spacing-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.1s ease-out;
+}
+
+.closeButton:hover {
+  background-color: var(--color-neutral-200);
+  color: var(--color-neutral-900);
+}
+
+.body {
+  padding: var(--spacing-2) var(--spacing-5) var(--spacing-5);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.footer {
+  padding: var(--spacing-2) var(--spacing-5) var(--spacing-5);
+  border-top: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-2);
+  background-color: white;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(15px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+  .drawer {
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,98 @@
+.container {
+  width: 100%;
+  overflow-x: auto;
+  background: white;
+  border-radius: 3px;
+  border: 1px solid var(--color-neutral-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--font-size-sm);
+}
+
+.th, .td {
+  padding: 10px var(--spacing-4);
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.th {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-neutral-500);
+  background-color: var(--color-neutral-50);
+  white-space: nowrap;
+  border-bottom: 2px solid var(--color-neutral-200);
+}
+
+.tr:last-child .td {
+  border-bottom: none;
+}
+
+.tr:hover .td {
+  background-color: var(--color-neutral-100);
+}
+
+.tr.selected .td {
+  background-color: #deebff;
+}
+
+.emptyState {
+  padding: var(--spacing-8);
+  text-align: center;
+  color: var(--color-neutral-500);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-top: 1px solid var(--color-neutral-200);
+  background-color: white;
+}
+
+.paginationInfo {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+}
+
+.paginationControls {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--border-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.15s ease;
+}
+
+.expandButton:hover {
+  background-color: var(--color-neutral-200);
+}
+
+.expandButtonExpanded {
+  transform: rotate(90deg);
+}
+
+.expansionRow .td {
+  background-color: #fafafa;
+  padding: var(--spacing-4) var(--spacing-6);
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.clickable {
+  cursor: pointer;
+}

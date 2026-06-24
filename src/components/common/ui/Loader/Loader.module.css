@@ -1,0 +1,28 @@
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.skeleton {
+  background-color: var(--color-neutral-200);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: var(--border-radius-base);
+}
+
+.pageLoader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  width: 100%;
+  padding: var(--spacing-8);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}

@@ -1,0 +1,117 @@
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-4);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-neutral-700);
+}
+
+.required {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+}
+
+.helpText {
+  color: var(--color-neutral-500);
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+}
+
+.input, .textarea, .select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 2px solid var(--color-neutral-200);
+  border-radius: var(--border-radius-base); /* 3px */
+  font-size: var(--font-size-sm); /* 13px/14px */
+  font-family: inherit;
+  background-color: var(--color-neutral-50); /* #fafbfc */
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  color: var(--color-neutral-900);
+  outline: none;
+}
+
+.input:hover, .textarea:hover, .select:hover {
+  background-color: #ebecf0;
+}
+
+.input:focus, .textarea:focus, .select:focus {
+  background-color: white;
+  border-color: var(--color-primary);
+}
+
+.input.invalid, .textarea.invalid, .select.invalid {
+  border-color: var(--color-danger);
+  background-color: #fff6f6;
+}
+
+.input.invalid:focus, .textarea.invalid:focus, .select.invalid:focus {
+  border-color: var(--color-danger);
+  background-color: white;
+}
+
+.input:disabled, .textarea:disabled, .select:disabled {
+  background-color: var(--color-neutral-100);
+  border-color: var(--color-neutral-200);
+  color: var(--color-neutral-500);
+  cursor: not-allowed;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.4;
+}
+
+.checkboxWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 2px solid var(--color-neutral-300);
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  margin: 0;
+}
+
+.checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  cursor: pointer;
+}
+
+.radio {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  margin: 0;
+}

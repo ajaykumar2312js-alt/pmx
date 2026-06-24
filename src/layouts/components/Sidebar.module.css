@@ -1,0 +1,202 @@
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--color-neutral-100);
+  border-right: 1px solid var(--color-neutral-200);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.logoContainer {
+  padding: var(--spacing-4) var(--spacing-5);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.logoIcon {
+  background-color: var(--color-primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.appName {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  letter-spacing: -0.02em;
+}
+
+.projectSelector {
+  padding: var(--spacing-4) var(--spacing-5) var(--spacing-2);
+}
+
+.selectorLabel {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-neutral-500);
+  margin-bottom: var(--spacing-2);
+  display: block;
+}
+
+.selectInput {
+  width: 100%;
+  padding: 6px var(--spacing-2);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  background-color: white;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--border-radius-base);
+  color: var(--color-neutral-900);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.selectInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+.navSection {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-3) var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: 8px var(--spacing-3);
+  color: var(--color-neutral-700);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border-radius: var(--border-radius-base);
+  text-decoration: none;
+  transition: all 0.15s ease-in-out;
+  border-left: 3px solid transparent;
+}
+
+.navItem:hover {
+  background-color: var(--color-neutral-200);
+  color: var(--color-neutral-900);
+  text-decoration: none;
+}
+
+.navItemActive {
+  background-color: #ede9fe;
+  color: var(--color-primary);
+  font-weight: 600;
+  border-left-color: var(--color-primary);
+  text-decoration: none;
+}
+
+.navItemActive:hover {
+  background-color: #ede9fe;
+  color: var(--color-primary);
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.navItemDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--color-neutral-200);
+  margin: var(--spacing-2) var(--spacing-3);
+}
+
+.adminLabel {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-neutral-500);
+  padding: var(--spacing-2) var(--spacing-3) 4px;
+}
+
+.footer {
+  padding: var(--spacing-4) var(--spacing-5);
+  border-top: 1px solid var(--color-neutral-200);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  background-color: var(--color-neutral-50);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.userName {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.userEmail {
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-500);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.signOutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: 8px;
+  background-color: transparent;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--border-radius-base);
+  color: var(--color-danger);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.signOutButton:hover {
+  background-color: #fee2e2;
+  border-color: var(--color-danger);
+}
