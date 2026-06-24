@@ -302,7 +302,10 @@ export function installMockApi() {
       updated.team = USERS.filter(u => (body.teamIds as string[]).includes(u.id));
     }
     if (body.poId) {
-      updated.po = USERS.find(u => u.id === body.poId);
+      const foundUser = USERS.find(u => u.id === body.poId);
+      if (foundUser) {
+        updated.po = foundUser;
+      }
     }
     PROJECTS[idx] = updated;
     return ok(PROJECTS[idx]);

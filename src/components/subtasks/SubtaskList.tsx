@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { fetchSubtasks, selectSubtasks, setSubtaskStatus } from '../../redux/slices/subtaskSlice';
-import { Avatar, Button, Spinner, Table, Column } from '../common';
+import { Avatar, Button, Table, Column } from '../common';
 import { ProgressBar, WorkflowStatusDropdown } from '../common/ui';
 import { SubtaskForm } from './SubtaskForm';
 import { SubtaskParentType, Subtask } from '../../services/subtaskService';

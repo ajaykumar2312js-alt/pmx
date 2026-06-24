@@ -10,7 +10,6 @@ import {
   Columns, 
   BarChart3, 
   Users, 
-  History, 
   LogOut,
   CheckSquare,
   Bug 
