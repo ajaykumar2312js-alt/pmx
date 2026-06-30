@@ -11,6 +11,7 @@ const LoginPage = lazy(() => import('../pages/auth/login'));
 const MicrosoftCallbackPage = lazy(() => import('../pages/auth/microsoft-callback'));
 const DashboardPage = lazy(() => import('../pages/dashboard'));
 const UsersPage = lazy(() => import('../pages/users'));
+const AuditLogsPage = lazy(() => import('../pages/audit-logs'));
 const ProjectsPage = lazy(() => import('../pages/projects'));
 const ProjectDetailPage = lazy(() => import('../pages/project-detail'));
 const BacklogPage = lazy(() => import('../pages/backlog'));
@@ -21,6 +22,7 @@ const StoryDetailPage = lazy(() => import('../pages/story-detail'));
 const TasksPage = lazy(() => import('../pages/tasks'));
 const TaskDetailPage = lazy(() => import('../pages/task-detail'));
 const BugsPage = lazy(() => import('../pages/bugs'));
+const BugDetailPage = lazy(() => import('../pages/bug-detail'));
 const ListPage = lazy(() => import('../pages/list'));
 const SprintsPage = lazy(() => import('../pages/sprints'));
 const KanbanPage = lazy(() => import('../pages/kanban'));
@@ -55,6 +57,7 @@ const router = createBrowserRouter(
         <Route path="/tasks" element={<Suspense fallback={<div>Loading...</div>}><TasksPage /></Suspense>} />
         <Route path="/tasks/:id" element={<Suspense fallback={<div>Loading...</div>}><TaskDetailPage /></Suspense>} />
         <Route path="/bugs" element={<Suspense fallback={<div>Loading...</div>}><BugsPage /></Suspense>} />
+        <Route path="/bugs/:id" element={<Suspense fallback={<div>Loading...</div>}><BugDetailPage /></Suspense>} />
         <Route path="/sprints" element={<Suspense fallback={<div>Loading...</div>}><SprintsPage /></Suspense>} />
         <Route path="/list" element={<Suspense fallback={<div>Loading...</div>}><ListPage /></Suspense>} />
         <Route path={RoutePaths.KANBAN} element={<Suspense fallback={<div>Loading...</div>}><KanbanPage /></Suspense>} />
@@ -63,6 +66,11 @@ const router = createBrowserRouter(
         <Route path="/users" element={
           <ProtectedRoute requireRoles={[Role.ADMIN]}>
             <Suspense fallback={<div>Loading...</div>}><UsersPage /></Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/audit-logs" element={
+          <ProtectedRoute requireRoles={[Role.ADMIN]}>
+            <Suspense fallback={<div>Loading...</div>}><AuditLogsPage /></Suspense>
           </ProtectedRoute>
         } />
       </Route>

@@ -8,10 +8,8 @@ export enum WorkItemType {
 /** Built-in child item types available when creating a child under any work item. */
 export enum ChildItemType {
   SUBTASK = 'SUBTASK',
-  STORY   = 'STORY',
   TASK    = 'TASK',
   BUG     = 'BUG',
-  CUSTOM  = 'CUSTOM',
 }
 
 

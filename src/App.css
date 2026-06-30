@@ -1,12 +1,12 @@
 .counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-1) var(--spacing-2-5);
+  border-radius: var(--border-radius-sm);
   color: var(--accent);
   background: var(--accent-bg);
   border: 2px solid transparent;
   transition: border-color 0.3s;
-  margin-bottom: 24px;
+  margin-bottom: var(--spacing-6);
 
   &:hover {
     border-color: var(--accent-border);
@@ -57,14 +57,14 @@
 #center {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: var(--spacing-6);
   place-content: center;
   place-items: center;
   flex-grow: 1;
 
   @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+    padding: var(--spacing-8) var(--spacing-5) var(--spacing-6);
+    gap: var(--spacing-5);
   }
 }
 
@@ -75,16 +75,16 @@
 
   & > div {
     flex: 1 1 0;
-    padding: 32px;
+    padding: var(--spacing-8);
     @media (max-width: 1024px) {
-      padding: 24px 20px;
+      padding: var(--spacing-6) var(--spacing-5);
     }
   }
 
   .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
+    margin-bottom: var(--spacing-4);
+    width: var(--spacing-6);
+    height: var(--spacing-6);
   }
 
   @media (max-width: 1024px) {
@@ -106,22 +106,22 @@
   list-style: none;
   padding: 0;
   display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
+  gap: var(--spacing-2);
+  margin: var(--spacing-8) 0 0;
 
   .logo {
-    height: 18px;
+    height: 1.125rem;
   }
 
   a {
     color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
+    font-size: var(--font-size-lg);
+    border-radius: var(--border-radius-sm);
     background: var(--social-bg);
     display: flex;
-    padding: 6px 12px;
+    padding: var(--spacing-1-5) var(--spacing-3);
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-2);
     text-decoration: none;
     transition: box-shadow 0.3s;
 
@@ -129,18 +129,18 @@
       box-shadow: var(--shadow);
     }
     .button-icon {
-      height: 18px;
-      width: 18px;
+      height: 1.125rem;
+      width: 1.125rem;
     }
   }
 
   @media (max-width: 1024px) {
-    margin-top: 20px;
+    margin-top: var(--spacing-5);
     flex-wrap: wrap;
     justify-content: center;
 
     li {
-      flex: 1 1 calc(50% - 8px);
+      flex: 1 1 calc(50% - var(--spacing-2));
     }
 
     a {

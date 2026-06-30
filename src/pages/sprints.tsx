@@ -1,55 +1,62 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { 
-  fetchSprints, 
-  createSprint, 
-  updateSprint, 
-  startSprint, 
-  selectSprints 
+import {
+  fetchSprints,
+  createSprint,
+  updateSprint,
+  startSprint,
+  deleteSprint,
+  completeSprint,
+  fetchSprintIssues,
+  fetchSprintCandidates,
+  assignIssueToSprint,
+  selectSprints,
+  selectCurrentSprintIssues,
+  selectSprintCandidates,
 } from '../redux/slices/sprintSlice';
-import { 
-  fetchBacklogItems, 
-  bulkUpdateBacklogItems, 
-  selectBacklogItems 
-} from '../redux/slices/backlogSlice';
 import { fetchProjects, selectActiveProject } from '../redux/slices/projectSlice';
-import { 
-  Button, 
-  Input, 
-  TextArea, 
-  DatePicker, 
-  Card, 
-  Badge, 
+import {
+  Button,
+  Input,
+  TextArea,
+  DatePicker,
+  Card,
+  Badge,
   Tag,
   Alert,
   Modal,
   Select,
   Table,
-  Column
+  Column,
+  ItemStatusDropdown
 } from '../components/common';
-import { 
-  Search, 
-  User, 
-  Trash2, 
-  Play, 
-  CheckCircle, 
-  Users, 
-  Briefcase
+import {
+  Search,
+  User,
+  Trash2,
+  Play,
+  CheckCircle,
+  Users,
+  Briefcase,
+  Edit2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { RoutePaths } from '../routes/routePaths';
 import { SprintStatus, Priority, WorkItemType } from '../common/enums';
 import { enqueueToast } from '../redux/slices/uiSlice';
 import { SubtaskList } from '../components/subtasks';
-import { Sprint } from '../services/sprintService';
-import { BacklogItem } from '../services/backlogService';
+import { Sprint, SprintIssue, sprintService } from '../services/sprintService';
 
 const SprintsPage: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const activeProject = useAppSelector(selectActiveProject);
   const activeProjectId = activeProject?.id || null;
 
   // Redux states
   const sprints = useAppSelector(selectSprints);
-  const backlogItems = useAppSelector(selectBacklogItems);
+  const sprintIssuesResult = useAppSelector(selectCurrentSprintIssues);
+  const candidates = useAppSelector(selectSprintCandidates);
 
   // Selected Sprint ID
   const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
@@ -65,8 +72,12 @@ const SprintsPage: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [sprintAssigneeId, setSprintAssigneeId] = useState('');
   const [sprintPriority, setSprintPriority] = useState<Priority>(Priority.MEDIUM);
-  const [sprintStatusField, setSprintStatusField] = useState<SprintStatus>(SprintStatus.PLANNED);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Complete sprint modal state
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completeAction, setCompleteAction] = useState<'move_to_backlog' | 'move_to_sprint'>('move_to_backlog');
+  const [completeNextSprintId, setCompleteNextSprintId] = useState('');
 
   // Backlog search/filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,7 +96,6 @@ const SprintsPage: React.FC = () => {
     setEndDate('');
     setSprintAssigneeId('');
     setSprintPriority(Priority.MEDIUM);
-    setSprintStatusField(SprintStatus.PLANNED);
     setFormErrors({});
   }, []);
 
@@ -94,17 +104,23 @@ const SprintsPage: React.FC = () => {
     dispatch(fetchProjects({ page: 1, limit: 100 }));
   }, [dispatch]);
 
-  // Load sprints and backlog items when active project changes
+  // Load sprints and candidates when active project changes
   useEffect(() => {
     if (activeProjectId) {
       dispatch(fetchSprints(activeProjectId));
-      dispatch(fetchBacklogItems({ projectId: activeProjectId, limit: 100 }));
-      // Intentional reset of selection/form when the active project changes.
+      dispatch(fetchSprintCandidates(activeProjectId));
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedSprintId(null);
       clearForm();
     }
   }, [dispatch, activeProjectId, clearForm]);
+
+  // Load sprint issues whenever selected sprint changes
+  useEffect(() => {
+    if (selectedSprintId) {
+      dispatch(fetchSprintIssues(selectedSprintId));
+    }
+  }, [dispatch, selectedSprintId]);
 
   // Select the first planned or active sprint by default if none selected
   useEffect(() => {
@@ -127,7 +143,6 @@ const SprintsPage: React.FC = () => {
       setEndDate(selectedSprint.endDate ? selectedSprint.endDate.split('T')[0] : '');
       setSprintAssigneeId(selectedSprint.assigneeId || '');
       setSprintPriority(selectedSprint.priority || Priority.MEDIUM);
-      setSprintStatusField(selectedSprint.status);
       setFormErrors({});
       setShowEditModal(true);
     }
@@ -152,17 +167,16 @@ const SprintsPage: React.FC = () => {
     allTeamMembers.unshift(projectPO);
   }
 
-  // Filter backlog items
-  const availableBacklog = backlogItems.filter(item => {
-    if (item.sprintId) return false;
+  // Unassigned issues available to be added to the selected sprint
+  const availableBacklog = candidates.filter(item => {
     if (searchQuery && !item.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (filterType && item.type !== filterType) return false;
     if (filterPriority && item.priority !== filterPriority) return false;
     return true;
   });
 
-  // Items added to the selected sprint
-  const sprintItems = backlogItems.filter(item => item.sprintId === selectedSprintId);
+  // Issues currently in the selected sprint (from issues collection)
+  const sprintItems: SprintIssue[] = sprintIssuesResult?.issues ?? [];
 
   // Calculations for Capacity Overview
   const memberAssignedCount: Record<string, number> = {};
@@ -188,9 +202,8 @@ const SprintsPage: React.FC = () => {
   const tasksCount = sprintItems.filter(i => i.type === WorkItemType.TASK).length;
   const bugsCount = sprintItems.filter(i => i.type === WorkItemType.BUG).length;
 
-  const assignedMembers = Array.from(new Set(
-    sprintItems.map(i => i.assignee).filter(Boolean)
-  )) as { id: string; firstName: string; lastName: string }[];
+  const assignedMemberIds = Array.from(new Set(sprintItems.map(i => i.assigneeId).filter(Boolean)));
+  const assignedMembers = allTeamMembers.filter(m => assignedMemberIds.includes(m.id));
 
   // Validations
   const validateForm = () => {
@@ -244,7 +257,6 @@ const SprintsPage: React.FC = () => {
           endDate: new Date(endDate).toISOString(),
           assigneeId: sprintAssigneeId || undefined,
           priority: sprintPriority,
-          status: sprintStatusField,
         }
       })).unwrap();
 
@@ -259,72 +271,57 @@ const SprintsPage: React.FC = () => {
     if (!selectedSprintId || backlogSelectedIds.length === 0) return;
 
     try {
-      await dispatch(bulkUpdateBacklogItems({
-        projectId: activeProjectId,
-        payload: {
-          itemIds: backlogSelectedIds,
-          sprintId: selectedSprintId,
-        }
-      })).unwrap();
-
-      dispatch(enqueueToast({ message: `Added ${backlogSelectedIds.length} items to sprint.`, severity: 'success' }));
+      await Promise.all(
+        backlogSelectedIds.map(id =>
+          dispatch(assignIssueToSprint({ issueId: id, sprintId: selectedSprintId })).unwrap()
+        )
+      );
+      dispatch(enqueueToast({ message: `Added ${backlogSelectedIds.length} item${backlogSelectedIds.length !== 1 ? 's' : ''} to sprint.`, severity: 'success' }));
       setBacklogSelectedIds([]);
     } catch (err: unknown) {
-      dispatch(enqueueToast({ message: (err as string) ||'Failed to add items to sprint', severity: 'error' }));
+      dispatch(enqueueToast({ message: (err as string) || 'Failed to add items to sprint', severity: 'error' }));
+    }
+  };
+
+  const handleAddOneToSprint = async (issueId: string) => {
+    if (!selectedSprintId) return;
+    try {
+      await dispatch(assignIssueToSprint({ issueId, sprintId: selectedSprintId })).unwrap();
+    } catch (err: unknown) {
+      dispatch(enqueueToast({ message: (err as string) || 'Failed to add item', severity: 'error' }));
     }
   };
 
   const handleRemoveFromSprint = async (itemId: string) => {
     try {
-      await dispatch(bulkUpdateBacklogItems({
-        projectId: activeProjectId,
-        payload: {
-          itemIds: [itemId],
-          sprintId: null,
-        }
-      })).unwrap();
-
+      await dispatch(assignIssueToSprint({ issueId: itemId, sprintId: null })).unwrap();
       dispatch(enqueueToast({ message: 'Item removed from sprint.', severity: 'success' }));
     } catch (err: unknown) {
-      dispatch(enqueueToast({ message: (err as string) ||'Failed to remove item', severity: 'error' }));
+      dispatch(enqueueToast({ message: (err as string) || 'Failed to remove item', severity: 'error' }));
     }
   };
 
-  const handleAssigneeChange = async (itemId: string, assigneeId: string) => {
-    const assignee = allTeamMembers.find(t => t.id === assigneeId) || null;
+  const handleAssigneeChange = async (itemId: string, newAssigneeId: string) => {
     try {
-      await dispatch(bulkUpdateBacklogItems({
-        projectId: activeProjectId,
-        payload: {
-          itemIds: [itemId],
-          assigneeId: assigneeId || null,
-          assignee: assignee ? { id: assignee.id, firstName: assignee.firstName, lastName: assignee.lastName } : null,
-        }
-      })).unwrap();
+      await sprintService.updateIssueAssignee(itemId, newAssigneeId || null);
+      if (selectedSprintId) dispatch(fetchSprintIssues(selectedSprintId));
     } catch (err: unknown) {
-      dispatch(enqueueToast({ message: (err as string) ||'Failed to update assignee', severity: 'error' }));
+      dispatch(enqueueToast({ message: (err as Error).message || 'Failed to update assignee', severity: 'error' }));
     }
   };
 
   const handleBulkAssign = async () => {
     if (sprintSelectedIds.length === 0) return;
-    const assignee = allTeamMembers.find(t => t.id === bulkAssigneeId) || null;
-
     try {
-      await dispatch(bulkUpdateBacklogItems({
-        projectId: activeProjectId,
-        payload: {
-          itemIds: sprintSelectedIds,
-          assigneeId: bulkAssigneeId || null,
-          assignee: assignee ? { id: assignee.id, firstName: assignee.firstName, lastName: assignee.lastName } : null,
-        }
-      })).unwrap();
-
+      await Promise.all(
+        sprintSelectedIds.map(id => sprintService.updateIssueAssignee(id, bulkAssigneeId || null))
+      );
       dispatch(enqueueToast({ message: `Assigned ${sprintSelectedIds.length} items.`, severity: 'success' }));
       setSprintSelectedIds([]);
       setBulkAssigneeId('');
+      if (selectedSprintId) dispatch(fetchSprintIssues(selectedSprintId));
     } catch (err: unknown) {
-      dispatch(enqueueToast({ message: (err as string) ||'Bulk assignment failed', severity: 'error' }));
+      dispatch(enqueueToast({ message: (err as string) || 'Bulk assignment failed', severity: 'error' }));
     }
   };
 
@@ -353,6 +350,33 @@ const SprintsPage: React.FC = () => {
       dispatch(enqueueToast({ message: 'Sprint started successfully! Backlog items moved to Sprint Board.', severity: 'success' }));
     } catch (err: unknown) {
       dispatch(enqueueToast({ message: (err as string) ||'Failed to start sprint', severity: 'error' }));
+    }
+  };
+
+  const handleCompleteSprint = async () => {
+    if (!selectedSprintId) return;
+    try {
+      const result = await dispatch(completeSprint({
+        id: selectedSprintId,
+        payload: {
+          action: completeAction,
+          nextSprintId: completeAction === 'move_to_sprint' ? completeNextSprintId : undefined,
+        },
+      })).unwrap();
+
+      const moved = result.movedIssues;
+      const destination = completeAction === 'move_to_sprint' ? 'next sprint' : 'backlog';
+      dispatch(enqueueToast({
+        message: `Sprint completed. ${moved > 0 ? `${moved} incomplete item${moved !== 1 ? 's' : ''} moved to ${destination}.` : 'All items were completed.'}`,
+        severity: 'success',
+      }));
+      setShowCompleteModal(false);
+      setCompleteAction('move_to_backlog');
+      setCompleteNextSprintId('');
+      // Refresh candidates so returned items reappear in the planning panel
+      if (activeProjectId) dispatch(fetchSprintCandidates(activeProjectId));
+    } catch (err: unknown) {
+      dispatch(enqueueToast({ message: (err as string) || 'Failed to complete sprint', severity: 'error' }));
     }
   };
 
@@ -441,12 +465,12 @@ const SprintsPage: React.FC = () => {
   ];
 
   // Standardized Sprint Items Table Columns
-  const sprintItemsColumns: Column<BacklogItem>[] = [
+  const sprintItemsColumns: Column<SprintIssue>[] = [
     {
       key: 'select',
       header: '',
       render: (row) => !isLocked ? (
-        <input 
+        <input
           type="checkbox"
           checked={sprintSelectedIds.includes(row.id)}
           onChange={() => toggleSprintSelected(row.id)}
@@ -465,16 +489,7 @@ const SprintsPage: React.FC = () => {
     {
       key: 'type',
       header: 'Type',
-      render: (row) => renderTypeLabel(row.type)
-    },
-    {
-      key: 'epic',
-      header: 'Epic',
-      render: (row) => row.epic?.name ? (
-        <span style={{ fontSize: '0.8125rem', color: 'var(--color-primary-500)' }}>{row.epic.name}</span>
-      ) : (
-        <span style={{ color: 'var(--color-neutral-400)', fontSize: '0.8125rem' }}>—</span>
-      )
+      render: (row) => renderTypeLabel(row.type as WorkItemType)
     },
     {
       key: 'assignee',
@@ -503,37 +518,52 @@ const SprintsPage: React.FC = () => {
     {
       key: 'status',
       header: 'Status',
-      render: (row) => <Tag status={row.status} />
-    },
-    {
-      key: 'dueDate',
-      header: 'Due Date',
-      render: () => <span style={{ color: 'var(--color-neutral-400)', fontSize: '0.8125rem' }}>—</span>
+      render: (row) => (
+        <ItemStatusDropdown
+          itemId={row.id}
+          itemType={row.type}
+          status={row.status}
+          onStatusChange={() => {
+            if (selectedSprintId) dispatch(fetchSprintIssues(selectedSprintId));
+          }}
+        />
+      )
     },
     {
       key: 'priority',
       header: 'Priority',
-      render: (row) => <Badge level={row.priority} />
+      render: (row) => row.priority ? <Badge level={row.priority as any} /> : <span style={{ color: 'var(--color-neutral-400)', fontSize: '0.8125rem' }}>—</span>
     },
     {
       key: 'actions',
       header: '',
       render: (row) => !isLocked ? (
-        <button
-          onClick={() => handleRemoveFromSprint(row.id)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--color-text-danger)',
-            cursor: 'pointer',
-            padding: '0.25rem',
-            display: 'flex',
-            alignItems: 'center'
-          }}
-          title="Remove from Sprint"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div style={{ display: 'flex', gap: '0.25rem' }}>
+          <button
+            onClick={() => {
+              if (row.type === 'STORY') navigate(RoutePaths.STORY_DETAIL(row.id));
+              else if (row.type === 'TASK') navigate(RoutePaths.TASK_DETAIL(row.id));
+              else if (row.type === 'BUG') navigate(RoutePaths.BUG_DETAIL(row.id));
+            }}
+            style={{
+              background: 'none', border: 'none', color: 'var(--color-neutral-500)',
+              cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+            }}
+            title="Edit"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button
+            onClick={() => handleRemoveFromSprint(row.id)}
+            style={{
+              background: 'none', border: 'none', color: 'var(--color-neutral-500)',
+              cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+            }}
+            title="Remove from Sprint"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       ) : null
     }
   ];
@@ -577,9 +607,28 @@ const SprintsPage: React.FC = () => {
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <Tag status={selectedSprint.status} />
                     {!isLocked && (
-                      <Button variant="secondary" onClick={openEditModal} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
-                        Edit Details
-                      </Button>
+                      <>
+                        <Button variant="secondary" onClick={openEditModal} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+                          Edit Details
+                        </Button>
+                        <Button 
+                          variant="danger" 
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to delete Sprint "${selectedSprint.name}"?`)) {
+                              try {
+                                await dispatch(deleteSprint(selectedSprint.id)).unwrap();
+                                dispatch(enqueueToast({ message: 'Sprint deleted successfully.', severity: 'success' }));
+                                setSelectedSprintId(null);
+                              } catch (err: unknown) {
+                                dispatch(enqueueToast({ message: (err as string) || 'Failed to delete sprint', severity: 'error' }));
+                              }
+                            }
+                          }}
+                          style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                        >
+                          Delete
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -683,7 +732,6 @@ const SprintsPage: React.FC = () => {
                         }}
                       >
                         <option value="">All Types</option>
-                        <option value={WorkItemType.EPIC}>Epic</option>
                         <option value={WorkItemType.STORY}>User Story</option>
                         <option value={WorkItemType.TASK}>Task</option>
                         <option value={WorkItemType.BUG}>Bug</option>
@@ -746,27 +794,15 @@ const SprintsPage: React.FC = () => {
                                 onChange={() => toggleBacklogSelected(item.id)}
                                 style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
                               />
-                              {renderTypeLabel(item.type)}
+                              {renderTypeLabel(item.type as any)}
                               <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.title}</span>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                              <Badge level={item.priority} />
-                              <Button 
+                              <Badge level={item.priority as any} />
+                              <Button
                                 variant="secondary"
-                                onClick={async () => {
-                                  try {
-                                    await dispatch(bulkUpdateBacklogItems({
-                                      projectId: activeProjectId,
-                                      payload: {
-                                        itemIds: [item.id],
-                                        sprintId: selectedSprintId,
-                                      }
-                                    })).unwrap();
-                                  } catch (err: unknown) {
-                                    dispatch(enqueueToast({ message: (err as string) ||'Failed to add item', severity: 'error' }));
-                                  }
-                                }}
+                                onClick={() => handleAddOneToSprint(item.id)}
                                 style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
                               >
                                 Add
@@ -860,13 +896,26 @@ const SprintsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {!isLocked && (
-                    <Button 
-                      variant="primary" 
+                  {selectedSprint?.status === SprintStatus.PLANNED && (
+                    <Button
+                      variant="primary"
                       onClick={handleStartSprint}
                       style={{ marginTop: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
                     >
                       <Play size={16} /> Start Sprint
+                    </Button>
+                  )}
+                  {selectedSprint?.status === SprintStatus.ACTIVE && (
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        setCompleteAction('move_to_backlog');
+                        setCompleteNextSprintId('');
+                        setShowCompleteModal(true);
+                      }}
+                      style={{ marginTop: '0.75rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                      <CheckCircle size={16} /> Complete Sprint
                     </Button>
                   )}
                 </div>
@@ -985,6 +1034,76 @@ const SprintsPage: React.FC = () => {
           </Modal>
         )}
 
+        {/* Complete Sprint Modal */}
+        {showCompleteModal && selectedSprint && (
+          <Modal title="Complete Sprint" isOpen onClose={() => setShowCompleteModal(false)}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '0.5rem' }}>
+              <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                You are completing <strong>{selectedSprint.name}</strong>.
+                Choose what to do with any incomplete items still in this sprint.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', borderRadius: '6px', border: `2px solid ${completeAction === 'move_to_backlog' ? 'var(--color-primary)' : 'var(--color-border)'}`, backgroundColor: completeAction === 'move_to_backlog' ? 'var(--color-primary-50, #f0f4ff)' : 'var(--color-bg-card)' }}>
+                  <input
+                    type="radio"
+                    name="completeAction"
+                    value="move_to_backlog"
+                    checked={completeAction === 'move_to_backlog'}
+                    onChange={() => { setCompleteAction('move_to_backlog'); setCompleteNextSprintId(''); }}
+                    style={{ marginTop: '2px', accentColor: 'var(--color-primary)' }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>Move to Backlog</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>Incomplete items will be unassigned from this sprint and return to the product backlog.</div>
+                  </div>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', borderRadius: '6px', border: `2px solid ${completeAction === 'move_to_sprint' ? 'var(--color-primary)' : 'var(--color-border)'}`, backgroundColor: completeAction === 'move_to_sprint' ? 'var(--color-primary-50, #f0f4ff)' : 'var(--color-bg-card)' }}>
+                  <input
+                    type="radio"
+                    name="completeAction"
+                    value="move_to_sprint"
+                    checked={completeAction === 'move_to_sprint'}
+                    onChange={() => setCompleteAction('move_to_sprint')}
+                    style={{ marginTop: '2px', accentColor: 'var(--color-primary)' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>Move to Another Sprint</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>Carry incomplete items forward into a planned sprint.</div>
+                    {completeAction === 'move_to_sprint' && (
+                      <select
+                        value={completeNextSprintId}
+                        onChange={(e) => setCompleteNextSprintId(e.target.value)}
+                        style={{ marginTop: '0.5rem', width: '100%', padding: '0.4rem 0.6rem', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-panel)', color: 'var(--color-text-primary)', fontSize: '0.85rem' }}
+                      >
+                        <option value="">— Select a sprint —</option>
+                        {sprints
+                          .filter(s => s.id !== selectedSprintId && s.status !== SprintStatus.COMPLETED)
+                          .map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))
+                        }
+                      </select>
+                    )}
+                  </div>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <Button variant="secondary" onClick={() => setShowCompleteModal(false)}>Cancel</Button>
+                <Button
+                  variant="danger"
+                  onClick={handleCompleteSprint}
+                  disabled={completeAction === 'move_to_sprint' && !completeNextSprintId}
+                >
+                  Complete Sprint
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
         {/* Standardized Edit Sprint Modal */}
         {showEditModal && (
           <Modal title="Edit Sprint Details" isOpen onClose={() => setShowEditModal(false)}>
@@ -1039,16 +1158,6 @@ const SprintsPage: React.FC = () => {
                   ]}
                 />
               </div>
-              <Select
-                label="Status"
-                value={sprintStatusField}
-                onChange={(e) => setSprintStatusField(e.target.value as SprintStatus)}
-                options={[
-                  { label: 'Planned', value: SprintStatus.PLANNED },
-                  { label: 'Active', value: SprintStatus.ACTIVE },
-                  { label: 'Completed', value: SprintStatus.COMPLETED }
-                ]}
-              />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
                 <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
                 <Button variant="primary" onClick={handleUpdateSprintDetails}>Save Changes</Button>

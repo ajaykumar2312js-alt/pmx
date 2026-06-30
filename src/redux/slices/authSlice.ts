@@ -9,6 +9,8 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   status: string;
+  avatarUrl?: string;
+  roles?: Role[];
 }
 
 export interface AuthState {

@@ -1,4 +1,6 @@
 .sortableItem {
+  display: flex;
+  align-items: stretch;
   touch-action: none;
   transition: transform 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
 }
@@ -14,7 +16,9 @@
   color: var(--color-neutral-400);
   display: flex;
   align-items: center;
-  padding: var(--spacing-1);
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
 }
 
 .dragHandle:active {

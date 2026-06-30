@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../redux/hooks';
 import { Button, Alert } from '../components/common';
-import { 
+import {
   BacklogList, 
   BacklogFilter, 
   BulkActionBar, 
   CreateBacklogItemModal, 
-  RefineItemModal 
+  EditBacklogItemModal 
 } from '../components/backlog';
-import { fetchBacklogItems, selectSelectedIds, clearSelection, bulkUpdateBacklogItems } from '../redux/slices/backlogSlice';
+import { fetchBacklogItems, selectSelectedIds, clearSelection, bulkUpdateBacklogItems, bulkDeleteBacklogItems } from '../redux/slices/backlogSlice';
 import { fetchSprints, selectSprints } from '../redux/slices/sprintSlice';
 import { enqueueToast } from '../redux/slices/uiSlice';
 import { Priority } from '../common/enums';
@@ -20,8 +20,11 @@ const BacklogPage: React.FC = () => {
   const selectedIds = useAppSelector(selectSelectedIds);
   const sprints = useAppSelector(selectSprints);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [refineItemId, setRefineItemId] = useState<string | null>(null);
+  const [editItemId, setEditItemId] = useState<string | null>(null);
   const [isApplyingBulk, setIsApplyingBulk] = useState(false);
+  
+  const allItems = useAppSelector(state => state.backlog.items);
+  const editingItem = editItemId ? allItems.find(i => i.id === editItemId) : null;
 
   React.useEffect(() => {
     if (activeProjectId) {
@@ -44,7 +47,7 @@ const BacklogPage: React.FC = () => {
     dispatch(fetchBacklogItems({ projectId: activeProjectId, ...filters, limit: 50 }));
   };
 
-  const handleBulkAction = async (action: { priority?: Priority, sprintId?: string }) => {
+  const handleBulkAction = async (action: { priority?: Priority, status?: string, sprintId?: string }) => {
     setIsApplyingBulk(true);
     try {
       await dispatch(bulkUpdateBacklogItems({
@@ -52,6 +55,7 @@ const BacklogPage: React.FC = () => {
         payload: {
           itemIds: selectedIds,
           priority: action.priority,
+          status: action.status,
           sprintId: action.sprintId
         }
       })).unwrap();
@@ -59,6 +63,22 @@ const BacklogPage: React.FC = () => {
     } catch (err: unknown) {
       const error = err as { message?: string };
       dispatch(enqueueToast({ message: error.message || 'Partial failure during bulk update', severity: 'error' }));
+    } finally {
+      setIsApplyingBulk(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsApplyingBulk(true);
+    try {
+      await dispatch(bulkDeleteBacklogItems({
+        projectId: activeProjectId,
+        payload: { itemIds: selectedIds }
+      })).unwrap();
+      dispatch(enqueueToast({ message: `Deleted ${selectedIds.length} items`, severity: 'success' }));
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      dispatch(enqueueToast({ message: error.message || 'Failed to delete items', severity: 'error' }));
     } finally {
       setIsApplyingBulk(false);
     }
@@ -75,7 +95,7 @@ const BacklogPage: React.FC = () => {
       
       <BacklogList 
         projectId={activeProjectId} 
-        onRefineItem={(id) => setRefineItemId(id)}
+        onEditItem={(id) => setEditItemId(id)}
       />
 
       {selectedIds.length > 0 && (
@@ -83,8 +103,14 @@ const BacklogPage: React.FC = () => {
           selectedCount={selectedIds.length}
           onClearSelection={() => dispatch(clearSelection())}
           onApplyAction={handleBulkAction}
+          onDeleteAction={handleBulkDelete}
           isApplying={isApplyingBulk}
           sprints={sprints}
+          statusOptions={[
+            { label: 'New', value: 'New' },
+            { label: 'Ready', value: 'Ready' },
+            { label: 'Closed', value: 'Closed' }
+          ]}
         />
       )}
 
@@ -95,10 +121,10 @@ const BacklogPage: React.FC = () => {
         />
       )}
 
-      {refineItemId && (
-        <RefineItemModal 
-          itemId={refineItemId}
-          onClose={() => setRefineItemId(null)}
+      {editItemId && editingItem && (
+        <EditBacklogItemModal 
+          item={editingItem}
+          onClose={() => setEditItemId(null)}
         />
       )}
     </div>

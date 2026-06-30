@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Input, Select, Button, Alert } from '../common';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
-import { createSubtask } from '../../redux/slices/subtaskSlice';
+import { createSubtask, updateSubtask } from '../../redux/slices/subtaskSlice';
 import { enqueueToast } from '../../redux/slices/uiSlice';
-import { SubtaskParentType } from '../../services/subtaskService';
+import { SubtaskParentType, Subtask } from '../../services/subtaskService';
 import { ChildItemType } from '../../common/enums';
 
 interface SubtaskFormProps {
@@ -12,15 +12,26 @@ interface SubtaskFormProps {
   parentId: string;
   onClose: () => void;
   onCreated?: () => void;
+  /** When provided the form operates in edit mode. */
+  subtaskId?: string;
+  initialData?: Subtask;
 }
 
-const TYPE_OPTIONS = [
-  { label: '📋 Subtask',      value: ChildItemType.SUBTASK },
-  { label: '📖 Story',        value: ChildItemType.STORY   },
-  { label: '✅ Task',          value: ChildItemType.TASK    },
-  { label: '🐛 Bug',          value: ChildItemType.BUG     },
-  { label: '✏️  Custom type…', value: ChildItemType.CUSTOM  },
-];
+// Hierarchy: Story → Subtask/Task/Bug | Task → Subtask/Bug | Bug → Subtask only
+const TYPE_OPTIONS_BY_PARENT: Record<SubtaskParentType, { label: string; value: ChildItemType }[]> = {
+  stories: [
+    { label: '📋 Subtask', value: ChildItemType.SUBTASK },
+    { label: '✅ Task',     value: ChildItemType.TASK    },
+    { label: '🐛 Bug',     value: ChildItemType.BUG     },
+  ],
+  tasks: [
+    { label: '📋 Subtask', value: ChildItemType.SUBTASK },
+    { label: '🐛 Bug',     value: ChildItemType.BUG     },
+  ],
+  bugs: [
+    { label: '📋 Subtask', value: ChildItemType.SUBTASK },
+  ],
+};
 
 const SEVERITY_OPTIONS = [
   { label: 'Low',      value: 'LOW'      },
@@ -29,39 +40,46 @@ const SEVERITY_OPTIONS = [
   { label: 'Critical', value: 'CRITICAL' },
 ];
 
-export const SubtaskForm: React.FC<SubtaskFormProps> = ({ parentType, parentId, onClose, onCreated }) => {
+export const SubtaskForm: React.FC<SubtaskFormProps> = ({
+  parentType,
+  parentId,
+  onClose,
+  onCreated,
+  subtaskId,
+  initialData,
+}) => {
   const dispatch    = useAppDispatch();
   const users       = useAppSelector(selectUsers);
+  const isEdit      = Boolean(subtaskId);
 
-  const [childItemType,  setChildItemType]  = useState<string>(ChildItemType.SUBTASK);
-  const [customTypeName, setCustomTypeName] = useState('');
-  const [title,          setTitle]          = useState('');
-  const [assigneeId,     setAssigneeId]     = useState('');
-  const [estimatedHours, setEstimatedHours] = useState('');
-  const [dueDate,        setDueDate]        = useState('');
-  const [severity,       setSeverity]       = useState('');
-  const [asA,            setAsA]            = useState('');
-  const [iWant,          setIWant]          = useState('');
-  const [soThat,         setSoThat]         = useState('');
+  const typeOptions = TYPE_OPTIONS_BY_PARENT[parentType];
+  const defaultType = typeOptions[0].value;
+
+  const [childItemType,  setChildItemType]  = useState<ChildItemType>(() => {
+    const initial = initialData?.childItemType ?? defaultType;
+    return typeOptions.some(o => o.value === initial) ? initial : defaultType;
+  });
+  const [title,          setTitle]          = useState(initialData?.title ?? '');
+  const [assigneeId,     setAssigneeId]     = useState(initialData?.assigneeId ?? '');
+  const [estimatedHours, setEstimatedHours] = useState(initialData?.estimatedHours != null ? String(initialData.estimatedHours) : '');
+  const [dueDate,        setDueDate]        = useState(initialData?.dueDate ?? '');
+  const [severity,       setSeverity]       = useState(initialData?.severity ?? '');
   const [error,          setError]          = useState<string | null>(null);
   const [submitting,     setSubmitting]     = useState(false);
 
   useEffect(() => { dispatch(fetchUsers({ limit: 100 })); }, [dispatch]);
 
-  const isStory   = childItemType === ChildItemType.STORY;
   const isTask    = childItemType === ChildItemType.TASK;
   const isSubtask = childItemType === ChildItemType.SUBTASK;
   const isBug     = childItemType === ChildItemType.BUG;
-  const isCustom  = childItemType === ChildItemType.CUSTOM;
 
   const handleSubmit = async () => {
     if (!title.trim()) { setError('Title is required.'); return; }
-    if (isCustom && !customTypeName.trim()) { setError('Custom type name is required.'); return; }
 
     setSubmitting(true);
     setError(null);
     try {
-      await dispatch(createSubtask({
+      const payload = {
         parentType,
         parentId,
         title:          title.trim(),
@@ -69,94 +87,46 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({ parentType, parentId, 
         estimatedHours: (isSubtask || isTask) && estimatedHours ? Number(estimatedHours) : null,
         dueDate:        isTask && dueDate ? dueDate : null,
         severity:       isBug && severity ? severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' : null,
-        asA:            isStory ? asA || null : null,
-        iWant:          isStory ? iWant || null : null,
-        soThat:         isStory ? soThat || null : null,
-        status:         'TODO',
         childItemType,
-        customTypeName: isCustom ? customTypeName.trim() : null,
-      })).unwrap();
-      dispatch(enqueueToast({ message: 'Child item created', severity: 'success' }));
+      };
+
+      if (isEdit && subtaskId) {
+        await dispatch(updateSubtask({ id: subtaskId, payload, parentType, parentId })).unwrap();
+        dispatch(enqueueToast({ message: 'Child item updated', severity: 'success' }));
+      } else {
+        await dispatch(createSubtask({ ...payload, status: 'To Do' })).unwrap();
+        dispatch(enqueueToast({ message: 'Child item created', severity: 'success' }));
+      }
+
       onCreated?.();
       onClose();
     } catch (err: unknown) {
-      setError((err as { message?: string }).message ?? 'Failed to create child item.');
+      setError((err as { message?: string }).message ?? `Failed to ${isEdit ? 'update' : 'create'} child item.`);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Modal title="New Child Item" isOpen onClose={onClose}>
+    <Modal title={isEdit ? 'Edit Child Item' : 'New Child Item'} isOpen onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {error && <Alert severity="error" message={error} />}
 
-        {/* ── Type selector ─────────────────────────────────────────── */}
+        {/* ── Type selector (disabled in edit mode) ────────────────── */}
         <Select
           label="Type *"
           value={childItemType}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-            setChildItemType(e.target.value);
+            if (isEdit) return;
+            setChildItemType(e.target.value as ChildItemType);
             setError(null);
           }}
-          options={TYPE_OPTIONS}
+          options={typeOptions}
+          disabled={isEdit}
         />
-
-        {/* Custom type name input (shown only for CUSTOM) */}
-        {isCustom && (
-          <Input
-            label="Custom type name *"
-            value={customTypeName}
-            onChange={e => setCustomTypeName(e.target.value)}
-            placeholder="e.g. Design Review, Research Spike…"
-          />
-        )}
 
         {/* ── Common fields ──────────────────────────────────────────── */}
         <Input label="Title *" value={title} onChange={e => setTitle(e.target.value)} required />
-
-        {/* ── Story-specific fields ──────────────────────────────────── */}
-        {isStory && (
-          <div
-            style={{
-              display: 'flex', flexDirection: 'column', gap: '0.75rem',
-              padding: '1rem', borderRadius: 8,
-              background: 'var(--color-primary-50, #eff6ff)',
-              border: '1px solid var(--color-primary-200, #bfdbfe)',
-            }}
-          >
-            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-primary-700, #1d4ed8)' }}>
-              Story template
-            </p>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <span style={{ width: 56, paddingTop: 6, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-neutral-500)', flexShrink: 0 }}>As a</span>
-              <Input
-                value={asA}
-                onChange={e => setAsA(e.target.value)}
-                placeholder="user role…"
-                style={{ flex: 1 }}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <span style={{ width: 56, paddingTop: 6, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-neutral-500)', flexShrink: 0 }}>I want</span>
-              <Input
-                value={iWant}
-                onChange={e => setIWant(e.target.value)}
-                placeholder="to do something…"
-                style={{ flex: 1 }}
-              />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-              <span style={{ width: 56, paddingTop: 6, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-neutral-500)', flexShrink: 0 }}>So that</span>
-              <Input
-                value={soThat}
-                onChange={e => setSoThat(e.target.value)}
-                placeholder="I achieve a goal…"
-                style={{ flex: 1 }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* ── Task / Subtask extra fields ────────────────────────────── */}
         {(isTask || isSubtask) && (
@@ -192,7 +162,7 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({ parentType, parentId, 
         {/* ── Assignee (all types) ───────────────────────────────────── */}
         <Select
           label="Assignee"
-          value={assigneeId}
+          value={assigneeId ?? ''}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAssigneeId(e.target.value)}
           options={[
             { label: 'Unassigned', value: '' },
@@ -202,7 +172,9 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({ parentType, parentId, 
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
           <Button variant="ghost"   onClick={onClose}       disabled={submitting}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit}  loading={submitting}>Create</Button>
+          <Button variant="primary" onClick={handleSubmit}  loading={submitting}>
+            {isEdit ? 'Save Changes' : 'Create'}
+          </Button>
         </div>
       </div>
     </Modal>

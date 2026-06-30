@@ -6,32 +6,45 @@ import { X } from 'lucide-react';
 interface BulkActionBarProps {
   selectedCount: number;
   onClearSelection: () => void;
-  onApplyAction: (action: { priority?: Priority, sprintId?: string }) => void;
+  onApplyAction: (action: { priority?: Priority, status?: string, sprintId?: string }) => void;
+  onDeleteAction?: () => void;
   isApplying: boolean;
   sprints: { id: string; name: string }[];
+  statusOptions?: { label: string; value: string }[];
 }
 
 export const BulkActionBar: React.FC<BulkActionBarProps> = ({ 
   selectedCount, 
   onClearSelection, 
   onApplyAction, 
+  onDeleteAction,
   isApplying,
-  sprints
+  sprints,
+  statusOptions
 }) => {
   const [priority, setPriority] = useState<Priority | ''>('');
+  const [status, setStatus] = useState<string>('');
   const [sprintId, setSprintId] = useState('');
 
   if (selectedCount === 0) return null;
 
   const handleApply = () => {
-    if (!priority && !sprintId) return;
+    if (!priority && !sprintId && !status) return;
     onApplyAction({
       priority: priority ? (priority as Priority) : undefined,
+      status: status || undefined,
       sprintId: sprintId || undefined,
     });
     // Reset internal state after apply (the parent might also clear selection)
     setPriority('');
+    setStatus('');
     setSprintId('');
+  };
+
+  const handleDeleteClick = () => {
+    if (window.confirm(`Are you sure you want to permanently delete ${selectedCount} selected items?`)) {
+      if (onDeleteAction) onDeleteAction();
+    }
   };
 
   return (
@@ -70,6 +83,19 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        {statusOptions && statusOptions.length > 0 && (
+          <select 
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{ padding: '0.5rem', borderRadius: '4px', border: 'none', background: 'var(--color-neutral-800)', color: 'white', outline: 'none' }}
+          >
+            <option value="">Update Status...</option>
+            {statusOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        )}
+
         <select 
           value={priority}
           onChange={(e) => setPriority(e.target.value as Priority | '')}
@@ -96,12 +122,23 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
         <Button 
           variant="primary" 
           size="sm" 
-          disabled={(!priority && !sprintId) || isApplying}
+          disabled={(!priority && !sprintId && !status) || isApplying}
           onClick={handleApply}
           loading={isApplying}
         >
           Apply
         </Button>
+
+        {onDeleteAction && (
+          <Button 
+            variant="danger" 
+            size="sm" 
+            onClick={handleDeleteClick}
+            disabled={isApplying}
+          >
+            Delete
+          </Button>
+        )}
       </div>
 
       <button 

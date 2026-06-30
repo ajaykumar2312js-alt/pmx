@@ -1,7 +1,6 @@
 import React from 'react';
 import { StatusDropdown } from './StatusDropdown';
-import { useAppSelector } from '../../../redux/hooks';
-import { selectActiveProject } from '../../../redux/slices/projectSlice';
+import { KANBAN_STATUSES } from '../../../common/kanbanStatuses';
 
 interface WorkflowStatusDropdownProps {
   value: string;
@@ -10,28 +9,19 @@ interface WorkflowStatusDropdownProps {
   size?: 'sm' | 'md';
 }
 
-export const WorkflowStatusDropdown: React.FC<WorkflowStatusDropdownProps> = ({ value, onChange, disabled, size }) => {
-  const project = useAppSelector(selectActiveProject);
-  const statuses = project?.workflowStatuses || [];
+const OPTIONS = KANBAN_STATUSES.map(s => ({ value: s.id, label: s.label }));
+const COLOR_MAP = KANBAN_STATUSES.reduce<Record<string, { bg: string; color: string }>>((acc, s) => {
+  acc[s.id] = { bg: s.color.bg, color: s.color.text };
+  return acc;
+}, {});
 
-  const options = statuses.map((s: any) => ({ value: s.id, label: s.label }));
-  const colorMap = statuses.reduce((acc: any, s: any) => {
-    acc[s.id] = { bg: s.color, color: '#1e293b' }; 
-    return acc;
-  }, {} as Record<string, { bg: string; color: string }>);
-
-  if (!options.find((o: any) => String(o.value) === String(value))) {
-    options.push({ value, label: value });
-  }
-
-  return (
-    <StatusDropdown
-      value={value}
-      options={options}
-      onChange={onChange}
-      colorMap={colorMap}
-      disabled={disabled}
-      size={size}
-    />
-  );
-};
+export const WorkflowStatusDropdown: React.FC<WorkflowStatusDropdownProps> = ({ value, onChange, disabled, size }) => (
+  <StatusDropdown
+    value={value}
+    options={OPTIONS}
+    onChange={onChange}
+    colorMap={COLOR_MAP}
+    disabled={disabled}
+    size={size}
+  />
+);

@@ -21,7 +21,7 @@ export const EpicForm: React.FC<EpicFormProps> = ({ initialData, onSubmit, onCan
   // Convert targetRelease ISO string to YYYY-MM-DD for date input
   const defaultDate = initialData?.targetRelease ? new Date(initialData.targetRelease).toISOString().split('T')[0] : '';
   const [targetRelease, setTargetRelease] = useState(defaultDate);
-  const [status, setStatus] = useState<EpicStatus>(initialData?.status || 'Open');
+  const [status, setStatus] = useState<EpicStatus>(initialData?.status || 'To Do');
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -98,10 +98,10 @@ export const EpicForm: React.FC<EpicFormProps> = ({ initialData, onSubmit, onCan
           value={status}
           onChange={(e) => setStatus(e.target.value as EpicStatus)}
           options={[
-            { label: 'Open', value: 'Open' },
+            { label: 'To Do', value: 'To Do' },
             { label: 'In Progress', value: 'In Progress' },
+            { label: 'In Review', value: 'In Review' },
             { label: 'Done', value: 'Done' },
-            { label: 'Cancelled', value: 'Cancelled' },
           ]}
         />
 

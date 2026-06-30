@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchTaskDetail, selectCurrentTask, selectTaskDetailStatus, updateTask } from '../../redux/slices/taskSlice';
-import { Card, Spinner, Alert, CommentThread, AttachmentUploader } from '../common';
+import { fetchTaskDetail, selectCurrentTask, selectTaskDetailStatus, updateTask, deleteTask } from '../../redux/slices/taskSlice';
+import { Card, Spinner, Alert, CommentThread, Button } from '../common';
 import { TimeTracker } from './TimeTracker';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { InlineEdit, WorkflowStatusDropdown } from '../common/ui';
@@ -11,6 +11,7 @@ import { enqueueToast } from '../../redux/slices/uiSlice';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
 import { TaskPayload } from '../../services/taskService';
+import { Trash2 } from 'lucide-react';
 
 interface TaskDetailProps {
   taskId: string;
@@ -76,6 +77,25 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
               </div>
             </div>
           </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={async () => {
+                if (window.confirm(`Are you sure you want to delete Task "${task.title}"?`)) {
+                  try {
+                    await dispatch(deleteTask(task.id)).unwrap();
+                    dispatch(enqueueToast({ message: 'Task deleted', severity: 'success' }));
+                    navigate(RoutePaths.TASKS);
+                  } catch {
+                    dispatch(enqueueToast({ message: 'Failed to delete task', severity: 'error' }));
+                  }
+                }
+              }}
+            >
+              <Trash2 size={14} style={{ marginRight: '0.25rem', color: 'var(--color-danger)' }} /> Delete
+            </Button>
+          </div>
         </div>
 
         {/* Description & Meta */}
@@ -125,10 +145,6 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ taskId }) => {
         <SubtaskList parentType="tasks" parentId={task.id} />
       </Card>
 
-      <Card style={{ padding: '1.5rem' }}>
-        <AttachmentUploader parentType="tasks" parentId={task.id} />
-      </Card>
-      
       <Card style={{ padding: '1.5rem' }}>
         <CommentThread parentType="tasks" parentId={task.id} />
       </Card>

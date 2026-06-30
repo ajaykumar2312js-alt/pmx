@@ -56,6 +56,33 @@ export const setSubtaskStatus = createAsyncThunk(
     )
 );
 
+export const updateSubtask = createAsyncThunk(
+  'subtasks/update',
+  async (
+    { id, payload, parentType, parentId }: { id: string; payload: Partial<SubtaskPayload>; parentType: SubtaskParentType; parentId: string },
+    { rejectWithValue },
+  ) =>
+    wrap(
+      async () => ({ key: keyOf(parentType, parentId), item: await subtaskService.update(id, payload) }),
+      rejectWithValue as (v: string) => unknown,
+    )
+);
+
+export const deleteSubtask = createAsyncThunk(
+  'subtasks/delete',
+  async (
+    { id, parentType, parentId }: { id: string; parentType: SubtaskParentType; parentId: string },
+    { rejectWithValue },
+  ) =>
+    wrap(
+      async () => {
+        await subtaskService.delete(id);
+        return { key: keyOf(parentType, parentId), id };
+      },
+      rejectWithValue as (v: string) => unknown,
+    )
+);
+
 const subtaskSlice = createSlice({
   name: 'subtasks',
   initialState,
@@ -82,6 +109,21 @@ const subtaskSlice = createSlice({
         if (list) {
           const idx = list.findIndex(s => s.id === item.id);
           if (idx !== -1) list[idx] = item;
+        }
+      })
+      .addCase(updateSubtask.fulfilled, (state, action) => {
+        const { key, item } = action.payload as { key: string; item: Subtask };
+        const list = state.byParent[key];
+        if (list) {
+          const idx = list.findIndex(s => s.id === item.id);
+          if (idx !== -1) list[idx] = item;
+        }
+      })
+      .addCase(deleteSubtask.fulfilled, (state, action) => {
+        const { key, id } = action.payload as { key: string; id: string };
+        const list = state.byParent[key];
+        if (list) {
+          state.byParent[key] = list.filter(s => s.id !== id);
         }
       });
   },

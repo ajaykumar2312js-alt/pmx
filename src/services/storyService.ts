@@ -1,4 +1,4 @@
-import { get, post, patch, buildPaginationParams, PaginationParams } from './apiClient';
+import { get, post, patch, del, buildPaginationParams, PaginationParams } from './apiClient';
 import { PaginationMeta } from '../common/types';
 import { Priority } from '../common/enums';
 
@@ -25,8 +25,6 @@ export interface Story {
   assigneeId?: string | null;
   assignee?: { id: string; firstName: string; lastName: string };
   status: string;
-  parentStoryId?: string | null;
-  childStories?: Story[];
   storyPoints?: number;
   createdAt: string;
   updatedAt: string;
@@ -51,10 +49,6 @@ export interface StoryListParams extends PaginationParams {
   sprintId?: string;
   assigneeId?: string;
   status?: string;
-}
-
-export interface SplitPayload {
-  children: { title: string }[];
 }
 
 export const storyService = {
@@ -85,11 +79,7 @@ export const storyService = {
     return res.data;
   },
 
-  split: async (id: string, payload: SplitPayload) => {
-    const res = await post<{ parentStory: Story; childStories: Story[] }>(
-      `/api/v1/stories/${id}/split`,
-      payload
-    );
-    return res.data;
-  },
+  delete: async (id: string): Promise<void> => {
+    await del(`/api/v1/stories/${id}`);
+  }
 };

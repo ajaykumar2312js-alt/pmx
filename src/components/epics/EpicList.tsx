@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchEpics, selectEpics, selectEpicStatus, selectEpicMeta, updateEpic } from '../../redux/slices/epicSlice';
+import { fetchEpics, selectEpics, selectEpicStatus, selectEpicMeta, deleteEpic } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { fetchStories, selectStories } from '../../redux/slices/storySlice';
 import { fetchTasks, selectTasks } from '../../redux/slices/taskSlice';
-import { Table, Button, ProgressBar, Spinner, Alert, Pagination, Select, Input, StatusDropdown } from '../common';
+import { Table, Button, ProgressBar, Spinner, Alert, Pagination, Select, Input, ItemStatusDropdown } from '../common';
+import { enqueueToast } from '../../redux/slices/uiSlice';
 import { Epic } from '../../services/epicService';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
@@ -77,21 +78,10 @@ export const EpicList: React.FC<EpicListProps> = ({ projectId, onEditEpic }) => 
       key: 'status', 
       header: 'Status',
       render: (item: Epic) => (
-        <StatusDropdown
-          value={item.status}
-          options={[
-            { label: 'Open', value: 'Open' },
-            { label: 'In Progress', value: 'In Progress' },
-            { label: 'Done', value: 'Done' }
-          ]}
-          onChange={(newVal) => {
-            dispatch(updateEpic({ id: item.id, payload: { status: newVal as Epic['status'] } }));
-          }}
-          colorMap={{
-            'Open': { bg: 'var(--color-primary-100)', color: 'var(--color-primary-700)' },
-            'In Progress': { bg: 'var(--color-warning-100)', color: 'var(--color-warning-700)' },
-            'Done': { bg: 'var(--color-success-100)', color: 'var(--color-success-700)' },
-          }}
+        <ItemStatusDropdown
+          itemId={item.id}
+          itemType="EPIC"
+          status={item.status}
         />
       )
     },
@@ -99,9 +89,27 @@ export const EpicList: React.FC<EpicListProps> = ({ projectId, onEditEpic }) => 
       key: 'actions', 
       header: 'Actions',
       render: (item: Epic) => (
-        <Button variant="secondary" size="sm" onClick={() => onEditEpic(item)}>
-          Edit
-        </Button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <Button variant="secondary" size="sm" onClick={() => onEditEpic(item)}>
+            Edit
+          </Button>
+          <Button 
+            variant="danger" 
+            size="sm" 
+            onClick={async () => {
+              if (window.confirm(`Are you sure you want to delete Epic "${item.name}"?`)) {
+                try {
+                  await dispatch(deleteEpic(item.id)).unwrap();
+                  dispatch(enqueueToast({ message: 'Epic deleted', severity: 'success' }));
+                } catch (err: unknown) {
+                  dispatch(enqueueToast({ message: (err as string) || 'Failed to delete epic', severity: 'error' }));
+                }
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </div>
       )
     }
   ];

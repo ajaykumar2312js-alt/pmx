@@ -78,6 +78,31 @@ export const updateEpic = createAsyncThunk(
   }
 );
 
+export const deleteEpic = createAsyncThunk(
+  'epics/deleteEpic',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await epicService.delete(id);
+      return id;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to delete epic');
+    }
+  }
+);
+
+export const refreshEpicChildren = createAsyncThunk(
+  'epics/refreshEpicChildren',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      return await epicService.getChildren(id);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to refresh epic children');
+    }
+  }
+);
+
 const epicSlice = createSlice({
   name: 'epics',
   initialState,
@@ -129,6 +154,18 @@ const epicSlice = createSlice({
         if (state.currentEpic?.id === action.payload.id) {
           state.currentEpic = action.payload;
         }
+      })
+      // Delete
+      .addCase(deleteEpic.fulfilled, (state, action) => {
+        state.items = state.items.filter(e => e.id !== action.payload);
+        if (state.currentEpic?.id === action.payload) {
+          state.currentEpic = null;
+          state.currentEpicChildren = [];
+        }
+      })
+      // Refresh children only (no detailStatus change to avoid spinner flash)
+      .addCase(refreshEpicChildren.fulfilled, (state, action) => {
+        state.currentEpicChildren = action.payload;
       });
   },
 });

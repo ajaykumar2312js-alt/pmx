@@ -8,14 +8,14 @@ const BugsPage: React.FC = () => {
 
   if (!activeProjectId) {
     return (
-      <div style={{ padding: '2rem' }}>
+      <div className="page-container">
         <Alert severity="warning" message="Please select an active project from the sidebar to view bugs." />
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+    <div className="page-container">
       <BugList projectId={activeProjectId} />
     </div>
   );

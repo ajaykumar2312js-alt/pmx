@@ -1,9 +1,9 @@
-import { get, post, patch, buildPaginationParams, PaginationParams } from './apiClient';
+import { get, post, patch, del, buildPaginationParams, PaginationParams } from './apiClient';
 import { PaginationMeta } from '../common/types';
 export interface Task {
   id: string;
   projectId: string;
-  epicId: string;
+  epicId?: string | null;
   epic?: { id: string; name: string };
   title: string;
   description?: string;
@@ -13,13 +13,14 @@ export interface Task {
   estimatedHours?: number;
   actualHours?: number;
   dueDate?: string;
+  priority?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface TaskPayload {
-  epicId: string;
+  epicId?: string | null;
   title: string;
   description?: string;
   assigneeId?: string;
@@ -27,7 +28,8 @@ export interface TaskPayload {
   estimatedHours?: number;
   actualHours?: number;
   dueDate?: string;
-  status: string;
+  priority?: string;
+  status?: string;
 }
 
 export interface TaskListParams extends PaginationParams {
@@ -60,5 +62,9 @@ export const taskService = {
   updateStatus: async (id: string, status: string) => {
     const res = await post<Task>(`/api/v1/tasks/${id}/status`, { status });
     return res.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await del(`/api/v1/tasks/${id}`);
   }
 };

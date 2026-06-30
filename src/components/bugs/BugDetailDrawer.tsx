@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchBugDetail, selectCurrentBug, selectBugDetailStatus, updateBug } from '../../redux/slices/bugSlice';
-import { Spinner, Alert, CommentThread, AttachmentUploader } from '../common';
+import { fetchBugDetail, selectCurrentBug, selectBugDetailStatus, updateBug, deleteBug } from '../../redux/slices/bugSlice';
+import { Spinner, Alert, CommentThread, Button } from '../common';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { SubtaskList } from '../subtasks/SubtaskList';
 import { InlineEdit, WorkflowStatusDropdown } from '../common/ui';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { Severity } from '../../common/enums';
 import { BugPayload } from '../../services/bugService';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 
 interface BugDetailDrawerProps {
   bugId: string;
@@ -50,11 +50,10 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
     { label: 'Critical', value: 'CRITICAL' },
   ];
   const priorityOptions = [
-    { label: 'Highest', value: 'Highest' },
-    { label: 'High', value: 'High' },
-    { label: 'Medium', value: 'Medium' },
-    { label: 'Low', value: 'Low' },
-    { label: 'Lowest', value: 'Lowest' },
+    { label: 'Critical', value: 'CRITICAL' },
+    { label: 'High',     value: 'HIGH'     },
+    { label: 'Medium',   value: 'MEDIUM'   },
+    { label: 'Low',      value: 'LOW'      },
   ];
 
   return (
@@ -66,9 +65,30 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
       {/* Header */}
       <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-neutral-200)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Bug Detail</h2>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
-          <X size={20} color="var(--color-neutral-500)" />
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {bug && (
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={async () => {
+                if (window.confirm(`Are you sure you want to delete Bug "${bug.title}"?`)) {
+                  try {
+                    await dispatch(deleteBug(bug.id)).unwrap();
+                    dispatch(enqueueToast({ message: 'Bug deleted', severity: 'success' }));
+                    onClose();
+                  } catch {
+                    dispatch(enqueueToast({ message: 'Failed to delete bug', severity: 'error' }));
+                  }
+                }
+              }}
+            >
+              <Trash2 size={14} style={{ marginRight: '0.25rem', color: 'var(--color-danger)' }} /> Delete
+            </Button>
+          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
+            <X size={20} color="var(--color-neutral-500)" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -174,7 +194,7 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1Rather', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <div style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Expected Result</div>
                 <InlineEdit
@@ -198,7 +218,6 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
             </div>
 
             <SubtaskList parentType="bugs" parentId={bug.id} />
-            <AttachmentUploader parentType="bugs" parentId={bug.id} />
             <CommentThread parentType="bugs" parentId={bug.id} />
           </>
         )}

@@ -60,7 +60,7 @@ export const BugFilter: React.FC<BugFilterProps> = ({
           label="Status"
           value={status}
           onChange={(e) => onStatusChange(e.target.value)}
-          options={workflowStatusFilterOptions(activeProject?.workflowStatuses || [])}
+          options={workflowStatusFilterOptions()}
         />
       </div>
       <div style={{ width: '200px' }}>

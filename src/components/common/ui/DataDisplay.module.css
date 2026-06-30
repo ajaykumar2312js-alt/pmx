@@ -2,9 +2,9 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: var(--font-size-xs); /* 11px */
+  padding: var(--spacing-0-5) var(--spacing-1-5);
+  border-radius: var(--border-radius-xs);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
@@ -15,8 +15,8 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
-  border-radius: 3px;
+  padding: var(--spacing-0-5) var(--spacing-1-5);
+  border-radius: var(--border-radius-xs);
   font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -27,42 +27,42 @@
 
 /* Severity/Priority Colors for Badge (Jira Priorities) */
 .critical {
-  background-color: #ffebe6 !important;
-  color: #de350b !important;
+  background-color: var(--color-status-red-bg) !important;
+  color: var(--color-status-red-fg) !important;
 }
 .high {
-  background-color: #ffebe6 !important;
-  color: #de350b !important;
+  background-color: var(--color-status-red-bg) !important;
+  color: var(--color-status-red-fg) !important;
 }
 .medium {
-  background-color: #fffae6 !important;
-  color: #ff8b00 !important;
+  background-color: var(--color-status-yellow-bg) !important;
+  color: var(--color-status-yellow-fg) !important;
 }
 .low {
-  background-color: #e3fcef !important;
-  color: #006644 !important;
+  background-color: var(--color-status-green-bg) !important;
+  color: var(--color-status-green-fg) !important;
 }
 
 /* Status Colors for Tag (Jira Status Lozenges) */
 .todo, .new, .planned, .archived {
-  background-color: #dfe1e6 !important;
-  color: #42526e !important;
+  background-color: var(--color-status-neutral-bg) !important;
+  color: var(--color-status-neutral-fg) !important;
 }
 .in_progress, .triage, .active {
-  background-color: #deebff !important;
-  color: #0052cc !important;
+  background-color: var(--color-status-blue-bg) !important;
+  color: var(--color-status-blue-fg) !important;
 }
 .in_review, .pending {
-  background-color: #fffae6 !important;
-  color: #ff8b00 !important;
+  background-color: var(--color-status-yellow-bg) !important;
+  color: var(--color-status-yellow-fg) !important;
 }
 .done, .completed, .success {
-  background-color: #e3fcef !important;
-  color: #006644 !important;
+  background-color: var(--color-status-green-bg) !important;
+  color: var(--color-status-green-fg) !important;
 }
 .failed {
-  background-color: #ffebe6 !important;
-  color: #de350b !important;
+  background-color: var(--color-status-red-bg) !important;
+  color: var(--color-status-red-fg) !important;
 }
 
 /* Avatar */
@@ -71,7 +71,7 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius-full);
-  background-color: #deebff;
+  background-color: var(--color-status-blue-bg);
   color: var(--color-primary);
   font-weight: 600;
   overflow: hidden;
@@ -89,7 +89,7 @@
 /* Card - Jira Clean Card Design */
 .card {
   background-color: white;
-  border-radius: 3px;
+  border-radius: var(--border-radius-xs);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-neutral-200);
   overflow: hidden;

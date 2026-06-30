@@ -22,8 +22,8 @@
 .logoIcon {
   background-color: var(--color-primary);
   color: white;
-  width: 32px;
-  height: 32px;
+  width: var(--spacing-8);
+  height: var(--spacing-8);
   border-radius: var(--border-radius-base);
   display: flex;
   align-items: center;
@@ -55,7 +55,7 @@
 
 .selectInput {
   width: 100%;
-  padding: 6px var(--spacing-2);
+  padding: var(--spacing-1-5) var(--spacing-2);
   font-family: inherit;
   font-size: var(--font-size-sm);
   background-color: white;
@@ -78,14 +78,14 @@
   padding: var(--spacing-3) var(--spacing-3);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-0-5);
 }
 
 .navItem {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  padding: 8px var(--spacing-3);
+  padding: var(--spacing-2) var(--spacing-3);
   color: var(--color-neutral-700);
   font-size: var(--font-size-base);
   font-weight: 500;
@@ -102,7 +102,7 @@
 }
 
 .navItemActive {
-  background-color: #ede9fe;
+  background-color: var(--color-primary-50);
   color: var(--color-primary);
   font-weight: 600;
   border-left-color: var(--color-primary);
@@ -110,14 +110,14 @@
 }
 
 .navItemActive:hover {
-  background-color: #ede9fe;
+  background-color: var(--color-primary-50);
   color: var(--color-primary);
 }
 
 .navIcon {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .navItemDisabled {
@@ -137,7 +137,7 @@
   text-transform: uppercase;
   font-weight: 600;
   color: var(--color-neutral-500);
-  padding: var(--spacing-2) var(--spacing-3) 4px;
+  padding: var(--spacing-2) var(--spacing-3) var(--spacing-1);
 }
 
 .footer {
@@ -184,7 +184,7 @@
   justify-content: center;
   gap: var(--spacing-2);
   width: 100%;
-  padding: 8px;
+  padding: var(--spacing-2);
   background-color: transparent;
   border: 1px solid var(--color-neutral-300);
   border-radius: var(--border-radius-base);
@@ -197,6 +197,6 @@
 }
 
 .signOutButton:hover {
-  background-color: #fee2e2;
+  background-color: var(--color-danger-50);
   border-color: var(--color-danger);
 }

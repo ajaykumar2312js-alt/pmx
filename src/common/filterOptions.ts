@@ -6,7 +6,7 @@
  * standardized and consistent across every page.
  */
 import { Severity, Priority } from './enums';
-import { WorkflowStatus } from '../services/projectService';
+import { KANBAN_STATUSES } from './kanbanStatuses';
 
 export interface FilterOption {
   value: string;
@@ -42,9 +42,9 @@ export interface NamedEntity {
   name: string;
 }
 
-export const workflowStatusFilterOptions = (statuses: WorkflowStatus[]): FilterOption[] => [
+export const workflowStatusFilterOptions = (): FilterOption[] => [
   allOption('All Statuses'),
-  ...statuses.map((s) => ({ value: s.id, label: s.label })),
+  ...KANBAN_STATUSES.map((s) => ({ value: s.id, label: s.label })),
 ];
 
 export const severityFilterOptions = (): FilterOption[] => [

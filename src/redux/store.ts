@@ -12,6 +12,8 @@ import bugReducer from './slices/bugSlice';
 import subtaskReducer from './slices/subtaskSlice';
 import sprintReducer from './slices/sprintSlice';
 import notificationReducer from './slices/notificationSlice';
+import dashboardReducer from './slices/dashboardSlice';
+import auditLogReducer from './slices/auditLogSlice';
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +29,8 @@ export const store = configureStore({
     subtasks: subtaskReducer,
     sprints: sprintReducer,
     notifications: notificationReducer,
+    dashboard: dashboardReducer,
+    auditLogs: auditLogReducer,
   },
   devTools: process.env.NODE_ENV !== 'production',
 });

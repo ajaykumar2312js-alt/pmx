@@ -13,9 +13,11 @@ export const RoutePaths = {
   TASKS: '/tasks',
   TASK_DETAIL: (id: string) => `/tasks/${id}`,
   BUGS: '/bugs',
+  BUG_DETAIL: (id: string) => `/bugs/${id}`,
   SPRINTS: '/sprints',
   KANBAN: '/kanban',
   LIST: '/list',
   USERS: '/users',
+  AUDIT_LOGS: '/audit-logs',
   NOT_FOUND: '*',
 } as const;

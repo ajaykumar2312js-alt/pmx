@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchStories, selectStories, selectStoryStatus, selectStoryMeta, changeStoryStatus } from '../../redux/slices/storySlice';
+import { fetchStories, selectStories, selectStoryStatus, selectStoryMeta, deleteStory } from '../../redux/slices/storySlice';
 import { selectActiveProject } from '../../redux/slices/projectSlice';
 import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
-import { Table, Spinner, Alert, Pagination, Button, Select, Input, Avatar, Column, WorkflowStatusDropdown } from '../common';
+import { Table, Spinner, Alert, Pagination, Button, Select, Input, Avatar, Column, ItemStatusDropdown } from '../common';
 import { Story } from '../../services/storyService';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
+import { Edit2, Trash2 } from 'lucide-react';
+import { enqueueToast } from '../../redux/slices/uiSlice';
 import { SubtaskList } from '../subtasks/SubtaskList';
 import {
   workflowStatusFilterOptions,
@@ -93,11 +95,10 @@ export const StoryList: React.FC<StoryListProps> = ({ projectId, onCreateStory }
       key: 'status',
       header: 'Status',
       render: (item) => (
-        <WorkflowStatusDropdown
-          value={item.status}
-          onChange={(newVal) => {
-            dispatch(changeStoryStatus({ id: item.id, status: newVal as string }));
-          }}
+        <ItemStatusDropdown
+          itemId={item.id}
+          itemType="STORY"
+          status={item.status}
         />
       ),
     },
@@ -110,6 +111,37 @@ export const StoryList: React.FC<StoryListProps> = ({ projectId, onCreateStory }
       key: 'priority',
       header: 'Priority',
       render: (item) => <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{item.priority}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (item) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(RoutePaths.STORY_DETAIL(item.id)); }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-neutral-500)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Edit story"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (!window.confirm(`Delete story "${item.title}"?`)) return;
+              try {
+                await dispatch(deleteStory(item.id)).unwrap();
+                dispatch(enqueueToast({ message: 'Story deleted', severity: 'success' }));
+              } catch {
+                dispatch(enqueueToast({ message: 'Failed to delete story', severity: 'error' }));
+              }
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Delete story"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
     },
   ];
 
@@ -140,7 +172,7 @@ export const StoryList: React.FC<StoryListProps> = ({ projectId, onCreateStory }
             label="Status"
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setCursor(undefined); }}
-            options={workflowStatusFilterOptions(activeProject?.workflowStatuses || [])}
+            options={workflowStatusFilterOptions()}
           />
         </div>
         <div style={{ width: '200px' }}>

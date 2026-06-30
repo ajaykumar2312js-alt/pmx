@@ -1,8 +1,8 @@
-import { get, post, patch, buildPaginationParams } from './apiClient';
+import { get, post, patch, del, buildPaginationParams } from './apiClient';
 import { PaginationMeta } from '../common/types';
 import { Priority, WorkItemType } from '../common/enums';
 
-export type BacklogItemStatus = 'New' | 'Ready' | 'Refined' | 'Closed';
+export type BacklogItemStatus = 'New' | 'Ready' | 'Closed';
 
 export interface BacklogItem {
   id: string;
@@ -13,8 +13,6 @@ export interface BacklogItem {
   priority: Priority;
   businessValue?: number;
   status: BacklogItemStatus;
-  epicId?: string;
-  epic?: { id: string; name: string };
   sprintId?: string;
   assigneeId?: string;
   assignee?: { id: string; firstName: string; lastName: string; avatarUrl?: string };
@@ -31,7 +29,6 @@ export interface BacklogListParams {
   search?: string;
   priority?: string;
   status?: string;
-  epicId?: string;
 }
 
 export interface CreateBacklogItemPayload {
@@ -40,6 +37,16 @@ export interface CreateBacklogItemPayload {
   priority: Priority;
   businessValue?: number;
   status: BacklogItemStatus;
+  type?: WorkItemType;
+}
+
+export interface UpdateBacklogItemPayload {
+  title?: string;
+  description?: string;
+  priority?: Priority;
+  businessValue?: number;
+  status?: BacklogItemStatus;
+  type?: WorkItemType;
 }
 
 export interface ReorderPayload {
@@ -57,6 +64,7 @@ export interface RefinePayload {
 export interface BulkUpdatePayload {
   itemIds: string[];
   priority?: Priority;
+  status?: string;
   sprintId?: string | null;
   assigneeId?: string | null;
   assignee?: { id: string; firstName: string; lastName: string; avatarUrl?: string } | null;
@@ -74,6 +82,11 @@ export const backlogService = {
     return res.data;
   },
 
+  update: async (itemId: string, payload: UpdateBacklogItemPayload) => {
+    const res = await patch<BacklogItem>(`/api/v1/backlog-items/${itemId}`, payload);
+    return res.data;
+  },
+
   reorder: async (projectId: string, payload: ReorderPayload) => {
     await patch<void>(`/api/v1/projects/${projectId}/backlog-items/reorder`, payload);
   },
@@ -86,5 +99,14 @@ export const backlogService = {
   bulkUpdate: async (projectId: string, payload: BulkUpdatePayload) => {
     const res = await patch<{ updatedCount: number }>(`/api/v1/projects/${projectId}/backlog-items/bulk`, payload);
     return res.data;
+  },
+
+  bulkDelete: async (projectId: string, payload: { itemIds: string[] }) => {
+    const res = await del<{ deletedCount: number }>(`/api/v1/projects/${projectId}/backlog-items/bulk`, { data: payload });
+    return res.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await del(`/api/v1/backlog-items/${id}`);
   }
 };

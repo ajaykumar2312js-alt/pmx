@@ -8,6 +8,7 @@ interface BadgeProps {
 }
 
 export const Badge = ({ level, className }: BadgeProps) => {
+  if (!level) return null;
   const colorClass = styles[level.toLowerCase()] || styles.low;
   return (
     <span className={clsx(styles.badge, colorClass, className)}>

@@ -88,6 +88,19 @@ export const updateTaskStatus = createAsyncThunk(
   }
 );
 
+export const deleteTask = createAsyncThunk(
+  'tasks/deleteTask',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await taskService.delete(id);
+      return id;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to delete task');
+    }
+  }
+);
+
 const taskSlice = createSlice({
   name: 'tasks',
   initialState,
@@ -146,6 +159,13 @@ const taskSlice = createSlice({
         }
         if (state.currentTask?.id === action.payload.id) {
           state.currentTask = action.payload;
+        }
+      })
+      // Delete
+      .addCase(deleteTask.fulfilled, (state, action) => {
+        state.items = state.items.filter(t => t.id !== action.payload);
+        if (state.currentTask?.id === action.payload) {
+          state.currentTask = null;
         }
       });
   },

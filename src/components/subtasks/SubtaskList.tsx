@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2, Edit2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchSubtasks, selectSubtasks, setSubtaskStatus } from '../../redux/slices/subtaskSlice';
-import { Avatar, Button, Table, Column } from '../common';
-import { ProgressBar, WorkflowStatusDropdown } from '../common/ui';
+import { fetchSubtasks, selectSubtasks, setSubtaskStatus, deleteSubtask } from '../../redux/slices/subtaskSlice';
+import { Avatar, Button, Table, Column, ItemStatusDropdown } from '../common';
+import { ProgressBar } from '../common/ui';
 import { SubtaskForm } from './SubtaskForm';
+import { enqueueToast } from '../../redux/slices/uiSlice';
 import { SubtaskParentType, Subtask } from '../../services/subtaskService';
 import { ChildItemType } from '../../common/enums';
 
@@ -25,27 +26,17 @@ interface TypeBadgeDef {
 
 const TYPE_BADGE: Record<string, TypeBadgeDef> = {
   [ChildItemType.SUBTASK]: { label: 'Subtask', bg: '#e0e7ff', color: '#4338ca' },
-  [ChildItemType.STORY]:   { label: 'Story',   bg: '#dcfce7', color: '#16a34a' },
   [ChildItemType.TASK]:    { label: 'Task',     bg: '#dbeafe', color: '#1d4ed8' },
   [ChildItemType.BUG]:     { label: 'Bug',      bg: '#fee2e2', color: '#dc2626' },
-  [ChildItemType.CUSTOM]:  { label: 'Custom',   bg: '#fef3c7', color: '#b45309' },
 };
 
-const getTypeBadge = (item: Subtask): TypeBadgeDef => {
-  if (item.childItemType === ChildItemType.CUSTOM) {
-    return {
-      label: item.customTypeName ?? 'Custom',
-      bg:    '#fef3c7',
-      color: '#b45309',
-    };
-  }
-  return TYPE_BADGE[item.childItemType] ?? { label: String(item.childItemType), bg: '#f1f5f9', color: '#64748b' };
-};
+const getTypeBadge = (item: Subtask): TypeBadgeDef =>
+  TYPE_BADGE[item.childItemType] ?? { label: String(item.childItemType), bg: '#f1f5f9', color: '#64748b' };
 
 
 
 const cycleStatus = (current: string): string =>
-  current === 'TODO' ? 'IN_PROGRESS' : current === 'IN_PROGRESS' ? 'DONE' : 'TODO';
+  current === 'Done' ? 'To Do' : 'Done';
 
 /**
  * Reusable child-item list embedded in Story / Task / Bug detail panels.
@@ -54,9 +45,10 @@ const cycleStatus = (current: string): string =>
 export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, onChange }) => {
   const dispatch  = useAppDispatch();
   const subtasks  = useAppSelector(selectSubtasks(parentType, parentId));
-  const [loading,      setLoading]      = useState(true);
-  const [showForm,     setShowForm]     = useState(false);
-  const [isCollapsed,  setIsCollapsed]  = useState(false);
+  const [loading,        setLoading]        = useState(true);
+  const [showForm,       setShowForm]       = useState(false);
+  const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
+  const [isCollapsed,    setIsCollapsed]    = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -70,7 +62,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, 
     load();
   }, [dispatch, parentType, parentId]);
 
-  const doneCount = subtasks.filter(s => s.status === 'DONE').length;
+  const doneCount = subtasks.filter(s => s.status === 'Done').length;
   const pct       = subtasks.length ? Math.round((doneCount / subtasks.length) * 100) : 0;
 
   const handleToggle = async (id: string, current: string) => {
@@ -84,7 +76,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, 
       header: 'Title',
       render: (item) => {
         const badge = getTypeBadge(item);
-        const isDone = item.status === 'DONE';
+        const isDone = item.status === 'Done';
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', overflow: 'hidden' }}>
             <input
@@ -147,11 +139,13 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, 
       key: 'status',
       header: 'Status',
       render: (item) => (
-        <WorkflowStatusDropdown
-          value={item.status}
-          onChange={(newVal) => {
-            dispatch(setSubtaskStatus({ id: item.id, status: newVal as string, parentType, parentId })).unwrap().then(() => onChange?.());
-          }}
+        <ItemStatusDropdown
+          itemId={item.id}
+          itemType="SUBTASK"
+          status={item.status}
+          parentType={parentType}
+          parentId={parentId}
+          onStatusChange={onChange}
         />
       )
     },
@@ -173,6 +167,44 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, 
           {(!item.severity && item.estimatedHours == null) && (
             <span style={{ color: 'var(--color-neutral-400)' }}>—</span>
           )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (item) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+          <button
+            onClick={() => setEditingSubtask(item)}
+            style={{
+              background: 'none', border: 'none', color: 'var(--color-neutral-500)',
+              cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+            }}
+            title={`Edit ${item.childItemType}`}
+          >
+            <Edit2 size={16} />
+          </button>
+          <button
+            onClick={async () => {
+              if (window.confirm(`Are you sure you want to delete ${item.childItemType} "${item.title}"?`)) {
+                try {
+                  await dispatch(deleteSubtask({ id: item.id, parentType, parentId })).unwrap();
+                  dispatch(enqueueToast({ message: `${item.childItemType} deleted`, severity: 'success' }));
+                  onChange?.();
+                } catch (err: unknown) {
+                  dispatch(enqueueToast({ message: (err as string) || `Failed to delete ${item.childItemType}`, severity: 'error' }));
+                }
+              }
+            }}
+            style={{
+              background: 'none', border: 'none', color: 'var(--color-text-danger)',
+              cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+            }}
+            title={`Delete ${item.childItemType}`}
+          >
+            <Trash2 size={16} />
+          </button>
         </div>
       )
     }
@@ -225,6 +257,18 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({ parentType, parentId, 
           parentType={parentType}
           parentId={parentId}
           onClose={() => setShowForm(false)}
+          onCreated={onChange}
+        />
+      )}
+
+      {/* ── Edit form modal ─────────────────────────────────────────── */}
+      {editingSubtask && (
+        <SubtaskForm
+          parentType={parentType}
+          parentId={parentId}
+          subtaskId={editingSubtask.id}
+          initialData={editingSubtask}
+          onClose={() => setEditingSubtask(null)}
           onCreated={onChange}
         />
       )}

@@ -188,18 +188,18 @@
 }
 
 .status_in_progress {
-  background-color: #dbeafe;
-  color: #1e40af;
+  background-color: var(--color-status-blue-bg);
+  color: var(--color-status-blue-fg);
 }
 
 .status_in_review {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: var(--color-status-yellow-bg);
+  color: var(--color-status-yellow-fg);
 }
 
 .status_done {
-  background-color: #d1fae5;
-  color: #065f46;
+  background-color: var(--color-status-green-bg);
+  color: var(--color-status-green-fg);
 }
 
 .priority {
@@ -227,7 +227,7 @@
 }
 
 .priority_critical {
-  background-color: #7f1d1d;
+  background-color: var(--color-priority-critical);
 }
 
 .dateText {
@@ -241,7 +241,7 @@
 /* Sub-tasks section styling */
 .subtasksContainer {
   width: 100%;
-  background-color: #fafafa;
+  background-color: var(--color-neutral-100);
   border-bottom: 1px solid var(--color-neutral-100);
 }
 

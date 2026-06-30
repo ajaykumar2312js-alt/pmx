@@ -37,8 +37,11 @@
   --font-size-xxl: 1.5rem;    /* 24px */
 
   /* Spacing */
+  --spacing-0-5: 0.125rem; /* 2px */
   --spacing-1: 0.25rem; /* 4px */
+  --spacing-1-5: 0.375rem; /* 6px */
   --spacing-2: 0.5rem;  /* 8px */
+  --spacing-2-5: 0.625rem; /* 10px */
   --spacing-3: 0.75rem; /* 12px */
   --spacing-4: 1rem;    /* 16px */
   --spacing-5: 1.25rem; /* 20px */
@@ -46,6 +49,7 @@
   --spacing-8: 2rem;    /* 32px */
 
   /* Borders */
+  --border-radius-xs: 3px;
   --border-radius-sm: 6px;
   --border-radius-base: 8px;
   --border-radius-lg: 12px;
@@ -61,6 +65,31 @@
   /* Layout sizes */
   --sidebar-width: 240px;
   --topbar-height: 56px;
+
+  /* Status/semantic palette (Jira-compatible) — single source of truth */
+  --color-status-blue-bg: #deebff;
+  --color-status-blue-fg: #0052cc;
+  --color-status-green-bg: #e3fcef;
+  --color-status-green-fg: #006644;
+  --color-status-red-bg: #ffebe6;
+  --color-status-red-fg: #de350b;
+  --color-status-yellow-bg: #fffae6;
+  --color-status-yellow-fg: #ff8b00;
+  --color-status-neutral-bg: #dfe1e6;
+  --color-status-neutral-fg: #42526e;
+
+  /* Tint tokens — soft background fills derived from primary/danger */
+  --color-primary-50: #ede9fe;
+  --color-primary-active: #5b21b6;
+  --color-danger-50: #fee2e2;
+  --color-danger-active: #e53e3e;
+
+  /* Form interaction tokens */
+  --color-field-hover: #ebecf0;
+  --color-field-invalid-bg: #fff6f6;
+
+  /* Priority indicator token (critical severity, deeper than danger) */
+  --color-priority-critical: #7f1d1d;
 }
 
 * {

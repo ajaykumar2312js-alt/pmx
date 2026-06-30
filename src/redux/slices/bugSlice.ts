@@ -88,6 +88,19 @@ export const transitionBug = createAsyncThunk(
   }
 );
 
+export const deleteBug = createAsyncThunk(
+  'bugs/deleteBug',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await bugService.delete(id);
+      return id;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to delete bug');
+    }
+  }
+);
+
 const bugSlice = createSlice({
   name: 'bugs',
   initialState,
@@ -146,6 +159,13 @@ const bugSlice = createSlice({
         }
         if (state.currentBug?.id === action.payload.id) {
           state.currentBug = action.payload;
+        }
+      })
+      // Delete
+      .addCase(deleteBug.fulfilled, (state, action) => {
+        state.items = state.items.filter(b => b.id !== action.payload);
+        if (state.currentBug?.id === action.payload) {
+          state.currentBug = null;
         }
       });
   },

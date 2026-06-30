@@ -136,10 +136,10 @@ const EPIC_CHILDREN: Record<string, object[]> = {
 
 const BACKLOG_ITEMS = [
   { id: 'bli-001', projectId: 'proj-001', title: 'Setup CI/CD pipeline for frontend',                order: 1, type: 'TASK',  status: 'Ready',   priority: 'HIGH',     epicId: 'epic-001', createdAt: '2025-01-20T09:00:00.000Z', updatedAt: '2025-01-20T09:00:00.000Z' },
-  { id: 'bli-002', projectId: 'proj-001', title: 'Implement cursor-based pagination for all APIs',   order: 2, type: 'STORY', status: 'Refined',  priority: 'HIGH',     epicId: 'epic-002', createdAt: '2025-01-22T09:00:00.000Z', updatedAt: '2025-02-01T09:00:00.000Z' },
+  { id: 'bli-002', projectId: 'proj-001', title: 'Implement cursor-based pagination for all APIs',   order: 2, type: 'STORY', status: 'Closed',  priority: 'HIGH',     epicId: 'epic-002', createdAt: '2025-01-22T09:00:00.000Z', updatedAt: '2025-02-01T09:00:00.000Z' },
   { id: 'bli-003', projectId: 'proj-001', title: 'Backlog drag-and-drop reordering',                 order: 3, type: 'STORY', status: 'Ready',    priority: 'MEDIUM',   epicId: 'epic-002', createdAt: '2025-01-25T09:00:00.000Z', updatedAt: '2025-02-10T09:00:00.000Z' },
   { id: 'bli-004', projectId: 'proj-001', title: 'Fix token expiry not clearing session correctly',  order: 4, type: 'BUG',   status: 'New',      priority: 'CRITICAL', epicId: null,       createdAt: '2025-02-10T09:00:00.000Z', updatedAt: '2025-02-12T09:00:00.000Z' },
-  { id: 'bli-005', projectId: 'proj-001', title: 'Epic management: create and link epics',           order: 5, type: 'STORY', status: 'Refined',  priority: 'HIGH',     epicId: 'epic-003', createdAt: '2025-02-15T09:00:00.000Z', updatedAt: '2025-03-01T09:00:00.000Z' },
+  { id: 'bli-005', projectId: 'proj-001', title: 'Epic management: create and link epics',           order: 5, type: 'STORY', status: 'Closed',  priority: 'HIGH',     epicId: 'epic-003', createdAt: '2025-02-15T09:00:00.000Z', updatedAt: '2025-03-01T09:00:00.000Z' },
   { id: 'bli-006', projectId: 'proj-001', title: 'User story G/W/T acceptance criteria editor',     order: 6, type: 'STORY', status: 'New',      priority: 'MEDIUM',   epicId: 'epic-002', createdAt: '2025-02-20T09:00:00.000Z', updatedAt: '2025-02-20T09:00:00.000Z' },
   { id: 'bli-007', projectId: 'proj-001', title: 'Audit log viewer with date-range filter',          order: 7, type: 'TASK',  status: 'Ready',    priority: 'LOW',      epicId: null,       createdAt: '2025-03-01T09:00:00.000Z', updatedAt: '2025-03-01T09:00:00.000Z' },
   { id: 'bli-008', projectId: 'proj-001', title: 'Bulk-assign sprint to multiple backlog items',     order: 8, type: 'STORY', status: 'New',      priority: 'MEDIUM',   epicId: 'epic-002', createdAt: '2025-03-05T09:00:00.000Z', updatedAt: '2025-03-05T09:00:00.000Z' },
@@ -164,9 +164,9 @@ const BUGS = [
 const SUBTASKS: any[] = [
   { id: 'st-001', parentId: 'str-001', parentType: 'STORY', childItemType: 'SUBTASK', title: 'Create UI component',             status: 'DONE',        assignee: USERS[2], estimatedHours: 2 },
   { id: 'st-002', parentId: 'str-001', parentType: 'STORY', childItemType: 'TASK',    title: 'Integrate pagination API',         status: 'IN_PROGRESS', assignee: USERS[2], estimatedHours: 4 },
-  { id: 'st-003', parentId: 'str-001', parentType: 'STORY', childItemType: 'STORY',   title: 'Write story-level acceptance test', status: 'TODO',        assignee: null,     asA: 'Developer', iWant: 'to verify pagination', soThat: 'regressions are caught' },
+  { id: 'st-003', parentId: 'str-001', parentType: 'STORY', childItemType: 'SUBTASK', title: 'Write acceptance test for pagination', status: 'TODO', assignee: null, estimatedHours: 2 },
   { id: 'st-004', parentId: 'str-001', parentType: 'STORY', childItemType: 'BUG',     title: 'Cursor is null on last page',      status: 'TODO',        assignee: USERS[3], severity: 'HIGH' },
-  { id: 'st-005', parentId: 'str-001', parentType: 'STORY', childItemType: 'CUSTOM',  customTypeName: 'Design Review', title: 'Review Figma mockups with UX', status: 'TODO', assignee: null },
+  { id: 'st-005', parentId: 'str-001', parentType: 'STORY', childItemType: 'SUBTASK', title: 'Review Figma mockups with UX', status: 'TODO', assignee: null },
 ];
 
 const SPRINTS: any[] = [
@@ -367,6 +367,13 @@ export function installMockApi() {
     return ok(EPICS[idx]);
   });
 
+  mock.onDelete(/\/api\/v1\/epics\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = EPICS.findIndex(e => e.id === id);
+    if (idx !== -1) EPICS.splice(idx, 1);
+    return noContent();
+  });
+
   // ── Backlog ──────────────────────────────────────────────────────────────────
   mock.onGet(/\/api\/v1\/projects\/.+\/backlog-items/).reply((config) => {
     const projectId = urlSegment(config, 4);
@@ -401,6 +408,7 @@ export function installMockApi() {
       const item = BACKLOG_ITEMS.find(b => b.id === id) as any;
       if (item) {
         if (body.priority) item.priority = body.priority as string;
+        if (body.status) item.status = body.status as string;
         if (body.sprintId !== undefined) item.sprintId = body.sprintId === null ? undefined : (body.sprintId as string);
         if (body.assigneeId !== undefined) {
           item.assigneeId = body.assigneeId === null ? undefined : (body.assigneeId as string);
@@ -412,9 +420,70 @@ export function installMockApi() {
     return ok({ updatedCount });
   });
 
+  mock.onDelete(/\/api\/v1\/projects\/.+\/backlog-items\/bulk/).reply((config) => {
+    const body = parse(config);
+    let deletedCount = 0;
+    (body.itemIds as string[]).forEach((id) => {
+      const idx = BACKLOG_ITEMS.findIndex(b => b.id === id);
+      if (idx !== -1) {
+        BACKLOG_ITEMS.splice(idx, 1);
+        deletedCount++;
+      }
+    });
+    return ok({ deletedCount });
+  });
+
   mock.onPost(/\/api\/v1\/backlog-items\/.+\/refine/).reply((config) => {
     const itemId = urlSegment(config, 4);
     return ok({ message: 'Item refined successfully', newId: uuidv4(), originalId: itemId });
+  });
+
+  mock.onDelete(/\/api\/v1\/backlog-items\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = BACKLOG_ITEMS.findIndex(b => b.id === id);
+    if (idx !== -1) BACKLOG_ITEMS.splice(idx, 1);
+    return noContent();
+  });
+
+  // ── Issues (Bulk) ────────────────────────────────────────────────────────────
+  mock.onPatch(/\/api\/v1\/projects\/.+\/issues\/bulk/).reply((config) => {
+    const body = parse(config);
+    let updatedCount = 0;
+    const allCollections = [STORIES, TASKS, BUGS]; // Epics don't usually have sprintId/assigneeId in the same way, but let's include if needed
+    (body.itemIds as string[]).forEach((id) => {
+      for (const collection of allCollections) {
+        const item = collection.find(b => b.id === id) as any;
+        if (item) {
+          if (body.priority) item.priority = body.priority as string;
+          if (body.status) item.status = body.status as string;
+          if (body.sprintId !== undefined) item.sprintId = body.sprintId === null ? undefined : (body.sprintId as string);
+          if (body.assigneeId !== undefined) {
+            item.assigneeId = body.assigneeId === null ? undefined : (body.assigneeId as string);
+            item.assignee = body.assigneeId === null ? undefined : USERS.find(u => u.id === body.assigneeId);
+          }
+          updatedCount++;
+          break;
+        }
+      }
+    });
+    return ok({ updatedCount });
+  });
+
+  mock.onDelete(/\/api\/v1\/projects\/.+\/issues\/bulk/).reply((config) => {
+    const body = parse(config);
+    let deletedCount = 0;
+    const allCollections = [STORIES, TASKS, BUGS];
+    (body.itemIds as string[]).forEach((id) => {
+      for (const collection of allCollections) {
+        const idx = collection.findIndex(b => b.id === id);
+        if (idx !== -1) {
+          collection.splice(idx, 1);
+          deletedCount++;
+          break;
+        }
+      }
+    });
+    return ok({ deletedCount });
   });
 
   // ── Stories ──────────────────────────────────────────────────────────────────
@@ -477,31 +546,11 @@ export function installMockApi() {
     return story ? ok(story) : notFound();
   });
 
-  mock.onPost(/\/api\/v1\/stories\/.+\/split/).reply((config) => {
-    const id = urlSegment(config, 4);
-    const parent = STORIES.find(s => s.id === id);
-    const { children: childDefs } = parse(config) as { children: { title: string }[] };
-    if (!parent) return notFound();
-    const now = new Date().toISOString();
-    const childStories = childDefs.map(c => ({
-      id: `str-child-${Date.now()}-${Math.random()}`,
-      projectId: parent.projectId,
-      epicId: parent.epicId,
-      sprintId: null,
-      parentStoryId: parent.id,
-      title: c.title,
-      asA: '', iWant: '', soThat: '',
-      acceptanceCriteria: [],
-      priority: parent.priority,
-      status: 'TODO' as const,
-      assigneeId: null, assignee: null,
-      createdAt: now, updatedAt: now,
-    }));
-    childStories.forEach(c => STORIES.unshift(c as typeof STORIES[0]));
-    const updatedParent = { ...parent, childStories, updatedAt: now };
+  mock.onDelete(/\/api\/v1\/stories\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
     const idx = STORIES.findIndex(s => s.id === id);
-    if (idx !== -1) STORIES[idx] = updatedParent as typeof STORIES[0];
-    return ok({ parentStory: updatedParent, childStories });
+    if (idx !== -1) STORIES.splice(idx, 1);
+    return noContent();
   });
 
   // ── Tasks ───────────────────────────────────────────────────────────────────
@@ -562,6 +611,13 @@ export function installMockApi() {
       }
     }
     return task ? ok(task) : notFound();
+  });
+
+  mock.onDelete(/\/api\/v1\/tasks\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = TASKS.findIndex(s => s.id === id);
+    if (idx !== -1) TASKS.splice(idx, 1);
+    return noContent();
   });
 
   // ── Bugs ────────────────────────────────────────────────────────────────────
@@ -644,6 +700,13 @@ export function installMockApi() {
     return ok(bug);
   });
 
+  mock.onDelete(/\/api\/v1\/bugs\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = BUGS.findIndex(s => s.id === id);
+    if (idx !== -1) BUGS.splice(idx, 1);
+    return noContent();
+  });
+
   // ── Comments ────────────────────────────────────────────────────────────────
   mock.onGet(/\/api\/v1\/(tasks|bugs|stories)\/.+\/comments/).reply((config) => {
     const parts = config.url?.split('/') || [];
@@ -723,6 +786,13 @@ export function installMockApi() {
     return ok(SUBTASKS[idx]);
   });
 
+  mock.onDelete(/\/api\/v1\/subtasks\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = SUBTASKS.findIndex(s => s.id === id);
+    if (idx !== -1) SUBTASKS.splice(idx, 1);
+    return noContent();
+  });
+
   // ── Sprints ──────────────────────────────────────────────────────────────────
   mock.onGet(/\/api\/v1\/projects\/.+\/sprints/).reply((config) => {
     const projectId = urlSegment(config, 4);
@@ -769,6 +839,13 @@ export function installMockApi() {
     SPRINTS[idx].status = 'ACTIVE';
     SPRINTS[idx].updatedAt = new Date().toISOString();
     return ok(SPRINTS[idx]);
+  });
+
+  mock.onDelete(/\/api\/v1\/sprints\/[^/]+$/).reply((config) => {
+    const id = config.url?.split('/').pop();
+    const idx = SPRINTS.findIndex(s => s.id === id);
+    if (idx !== -1) SPRINTS.splice(idx, 1);
+    return noContent();
   });
 
 

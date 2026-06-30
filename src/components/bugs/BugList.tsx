@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchBugs, selectBugs, selectBugMeta, selectBugStatus, createBug } from '../../redux/slices/bugSlice';
+import { fetchBugs, selectBugs, selectBugMeta, selectBugStatus, createBug, deleteBug } from '../../redux/slices/bugSlice';
 import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
-import { Table, Button, Avatar, Column, Pagination } from '../common/ui';
+import { Table, Button, Avatar, Column, Pagination, ItemStatusDropdown } from '../common/ui';
+import { Edit2, Trash2 } from 'lucide-react';
 import { Severity } from '../../common/enums';
 import { UNASSIGNED_VALUE } from '../../common/filterOptions';
 import { BugForm } from './BugForm';
@@ -15,8 +16,7 @@ import { BugPayload, Bug } from '../../services/bugService';
 import { SubtaskList } from '../subtasks/SubtaskList';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
-import { updateBug } from '../../redux/slices/bugSlice';
-import { WorkflowStatusDropdown } from '../common/ui';
+
 
 interface BugListProps {
   projectId: string;
@@ -101,11 +101,10 @@ export const BugList: React.FC<BugListProps> = ({ projectId }) => {
       key: 'status', 
       header: 'Status', 
       render: (row) => (
-        <WorkflowStatusDropdown
-          value={row.status}
-          onChange={(newVal) => {
-            dispatch(updateBug({ id: row.id, payload: { status: newVal as string } }));
-          }}
+        <ItemStatusDropdown
+          itemId={row.id}
+          itemType="BUG"
+          status={row.status}
         />
       )
     },
@@ -118,7 +117,38 @@ export const BugList: React.FC<BugListProps> = ({ projectId }) => {
       key: 'priority',
       header: 'Priority',
       render: (row) => <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{row.priority}</span>
-    }
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (row) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); setSelectedBugId(row.id); }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-neutral-500)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Edit bug"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (!window.confirm(`Delete bug "${row.title}"?`)) return;
+              try {
+                await dispatch(deleteBug(row.id)).unwrap();
+                dispatch(enqueueToast({ message: 'Bug deleted', severity: 'success' }));
+              } catch {
+                dispatch(enqueueToast({ message: 'Failed to delete bug', severity: 'error' }));
+              }
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Delete bug"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const filteredBugs = bugs.filter(b => {

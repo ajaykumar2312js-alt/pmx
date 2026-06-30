@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { backlogService, BacklogItem, BacklogListParams, CreateBacklogItemPayload, ReorderPayload, BulkUpdatePayload, RefinePayload } from '../../services/backlogService';
+import { backlogService, BacklogItem, BacklogListParams, CreateBacklogItemPayload, UpdateBacklogItemPayload, ReorderPayload, BulkUpdatePayload, RefinePayload } from '../../services/backlogService';
 import { PaginationMeta } from '../../common/types';
 
 export interface BacklogState {
@@ -43,6 +43,19 @@ export const createBacklogItem = createAsyncThunk(
   }
 );
 
+export const updateBacklogItem = createAsyncThunk(
+  'backlog/updateBacklogItem',
+  async ({ itemId, payload }: { itemId: string; payload: UpdateBacklogItemPayload }, { rejectWithValue }) => {
+    try {
+      const response = await backlogService.update(itemId, payload);
+      return response;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to update backlog item');
+    }
+  }
+);
+
 export const reorderBacklogItem = createAsyncThunk(
   'backlog/reorderBacklogItem',
   async ({ projectId, payload, originalItems }: { projectId: string; payload: ReorderPayload, originalItems: BacklogItem[] }, { rejectWithValue }) => {
@@ -70,6 +83,19 @@ export const bulkUpdateBacklogItems = createAsyncThunk(
   }
 );
 
+export const bulkDeleteBacklogItems = createAsyncThunk(
+  'backlog/bulkDeleteBacklogItems',
+  async ({ projectId, payload }: { projectId: string; payload: { itemIds: string[] } }, { rejectWithValue }) => {
+    try {
+      const response = await backlogService.bulkDelete(projectId, payload);
+      return { payload, response };
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to perform bulk delete');
+    }
+  }
+);
+
 export const refineBacklogItem = createAsyncThunk(
   'backlog/refineBacklogItem',
   async ({ itemId, payload }: { itemId: string; payload: RefinePayload }, { rejectWithValue }) => {
@@ -79,6 +105,19 @@ export const refineBacklogItem = createAsyncThunk(
     } catch (error: unknown) {
       const err = error as { message?: string };
       return rejectWithValue(err.message || 'Failed to refine item');
+    }
+  }
+);
+
+export const deleteBacklogItem = createAsyncThunk(
+  'backlog/deleteBacklogItem',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await backlogService.delete(id);
+      return id;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to delete backlog item');
     }
   }
 );
@@ -129,6 +168,13 @@ const backlogSlice = createSlice({
       .addCase(createBacklogItem.fulfilled, (state, action) => {
         state.items.unshift(action.payload); // prepend the new item
       })
+      // Update
+      .addCase(updateBacklogItem.fulfilled, (state, action) => {
+        const index = state.items.findIndex(i => i.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+      })
       // Reorder (failure triggers rollback)
       .addCase(reorderBacklogItem.rejected, (state, action) => {
         const payload = action.payload as { originalItems?: BacklogItem[] };
@@ -138,10 +184,11 @@ const backlogSlice = createSlice({
       })
       // Bulk update
       .addCase(bulkUpdateBacklogItems.fulfilled, (state, action) => {
-        const { itemIds, priority, sprintId, assigneeId, assignee } = action.payload.payload;
+        const { itemIds, priority, status, sprintId, assigneeId, assignee } = action.payload.payload;
         state.items.forEach(item => {
           if (itemIds.includes(item.id)) {
             if (priority !== undefined) item.priority = priority;
+            if (status !== undefined) item.status = status as any;
             if (sprintId !== undefined) item.sprintId = sprintId === null ? undefined : sprintId;
             if (assigneeId !== undefined) item.assigneeId = assigneeId === null ? undefined : assigneeId;
             if (assignee !== undefined) item.assignee = assignee === null ? undefined : assignee;
@@ -154,8 +201,19 @@ const backlogSlice = createSlice({
         const { itemId } = action.payload;
         const item = state.items.find(i => i.id === itemId);
         if (item) {
-          item.status = 'Refined';
+          item.status = 'Closed';
         }
+      })
+      // Delete
+      .addCase(deleteBacklogItem.fulfilled, (state, action) => {
+        state.items = state.items.filter(i => i.id !== action.payload);
+        state.selectedIds = state.selectedIds.filter(id => id !== action.payload);
+      })
+      // Bulk Delete
+      .addCase(bulkDeleteBacklogItems.fulfilled, (state, action) => {
+        const { payload } = action.payload;
+        state.items = state.items.filter(item => !payload.itemIds.includes(item.id));
+        state.selectedIds = state.selectedIds.filter(id => !payload.itemIds.includes(id));
       });
   },
 });

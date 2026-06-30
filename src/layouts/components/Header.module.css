@@ -50,18 +50,18 @@
 }
 
 .projectBadge {
-  background-color: #deebff;
+  background-color: var(--color-status-blue-bg);
   color: var(--color-primary);
   font-size: var(--font-size-xs);
   font-weight: 700;
-  padding: 2px 8px;
+  padding: var(--spacing-0-5) var(--spacing-2);
   border-radius: var(--border-radius-sm);
   text-transform: uppercase;
 }
 
 .notificationSlot {
-  width: 20px;
-  height: 20px;
+  width: var(--spacing-5);
+  height: var(--spacing-5);
   display: flex;
   align-items: center;
   justify-content: center;

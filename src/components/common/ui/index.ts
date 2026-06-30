@@ -27,3 +27,4 @@ export * from './NotificationDropdown';
 export * from './InlineEdit';
 export * from './StatusDropdown';
 export * from './WorkflowStatusDropdown';
+export * from './ItemStatusDropdown';

@@ -1,33 +1,20 @@
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { fetchEpics, selectEpics } from '../redux/slices/epicSlice';
-import { fetchStories, selectStories } from '../redux/slices/storySlice';
-import { fetchTasks, selectTasks } from '../redux/slices/taskSlice';
-import { fetchBugs, selectBugs } from '../redux/slices/bugSlice';
-import { fetchBacklogItems, selectBacklogItems } from '../redux/slices/backlogSlice';
+import { fetchDashboardSummary, selectDashboardSummary, selectDashboardStatus } from '../redux/slices/dashboardSlice';
 import { selectActiveProject } from '../redux/slices/projectSlice';
-import { Card, Alert, Button } from '../components/common';
+import { Card, Alert, Button, Spinner } from '../components/common';
 import { LayoutDashboard, Target, BookOpen, CheckSquare, Bug, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
-
 const DashboardPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const activeProject = useAppSelector(selectActiveProject);
+  const dispatch       = useAppDispatch();
+  const activeProject  = useAppSelector(selectActiveProject);
   const activeProjectId = activeProject?.id;
-
-  const epics = useAppSelector(selectEpics);
-  const stories = useAppSelector(selectStories);
-  const tasks = useAppSelector(selectTasks);
-  const bugs = useAppSelector(selectBugs);
-  const backlogItems = useAppSelector(selectBacklogItems);
+  const summary        = useAppSelector(selectDashboardSummary);
+  const loadStatus     = useAppSelector(selectDashboardStatus);
 
   useEffect(() => {
     if (activeProjectId) {
-      dispatch(fetchEpics({ projectId: activeProjectId, params: { limit: 100 } }));
-      dispatch(fetchStories({ projectId: activeProjectId, params: { limit: 100 } }));
-      dispatch(fetchTasks({ projectId: activeProjectId, params: { limit: 100 } }));
-      dispatch(fetchBugs({ projectId: activeProjectId, params: { limit: 100 } }));
-      dispatch(fetchBacklogItems({ projectId: activeProjectId, limit: 100 }));
+      dispatch(fetchDashboardSummary(activeProjectId));
     }
   }, [dispatch, activeProjectId]);
 
@@ -42,38 +29,32 @@ const DashboardPage: React.FC = () => {
     );
   }
 
-  // --- Calculate Work Item Distribution ---
-  let todoCount = 0;
-  let inProgressCount = 0;
-  let doneCount = 0;
+  if (loadStatus === 'loading' || !summary) {
+    return (
+      <div className="page-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-text-secondary)' }}>
+          <Spinner size={22} />
+          <span>Loading dashboard…</span>
+        </div>
+      </div>
+    );
+  }
 
-  stories.forEach(s => {
-    if (s.status === 'TODO') todoCount++;
-    else if (s.status === 'IN_PROGRESS' || s.status === 'IN_REVIEW') inProgressCount++;
-    else if (s.status === 'DONE') doneCount++;
-  });
+  if (loadStatus === 'failed') {
+    return (
+      <div className="page-container">
+        <Alert severity="error" message="Failed to load dashboard data. Please try refreshing the page." />
+      </div>
+    );
+  }
 
-  tasks.forEach(t => {
-    if (t.status === 'TODO') todoCount++;
-    else if (t.status === 'IN_PROGRESS' || t.status === 'IN_REVIEW') inProgressCount++;
-    else if (t.status === 'DONE') doneCount++;
-  });
+  const { totalEpics, activeEpics, totalStories, totalTasks, openBugs, criticalBugs,
+          unassignedBacklog, workDistribution, epicProgress } = summary;
 
-  bugs.forEach(b => {
-    if (b.status === 'TODO') todoCount++;
-    else if (b.status === 'IN_PROGRESS' || b.status === 'IN_REVIEW') inProgressCount++;
-    else if (b.status === 'DONE') doneCount++;
-  });
-
-  const totalWorkItems = todoCount + inProgressCount + doneCount;
-  const todoPct = totalWorkItems > 0 ? (todoCount / totalWorkItems) * 100 : 0;
-  const inProgressPct = totalWorkItems > 0 ? (inProgressCount / totalWorkItems) * 100 : 0;
-  const donePct = totalWorkItems > 0 ? (doneCount / totalWorkItems) * 100 : 0;
-
-  // --- Calculate Health & Risk ---
-  const criticalBugs = bugs.filter(b => b.status !== 'DONE' && (b.priority === 'CRITICAL' || b.priority === 'HIGH'));
-  const unassignedBacklog = backlogItems.filter(b => !b.assigneeId && b.status !== 'Closed');
-  const activeEpics = epics.filter(e => e.status !== 'Done' && e.status !== 'Cancelled');
+  const totalWork   = workDistribution.todo + workDistribution.inProgress + workDistribution.done;
+  const todoPct     = totalWork > 0 ? (workDistribution.todo      / totalWork) * 100 : 0;
+  const ipPct       = totalWork > 0 ? (workDistribution.inProgress / totalWork) * 100 : 0;
+  const donePct     = totalWork > 0 ? (workDistribution.done       / totalWork) * 100 : 0;
 
   return (
     <div className="page-container">
@@ -96,33 +77,33 @@ const DashboardPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Epics</p>
-                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{epics.length}</h2>
+                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{totalEpics}</h2>
               </div>
               <div style={{ padding: '0.5rem', backgroundColor: '#eef2ff', borderRadius: '8px', color: '#4f46e5' }}>
                 <Target size={24} />
               </div>
             </div>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{activeEpics.length} active</p>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{activeEpics} active</p>
           </Card>
 
           <Card style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>User Stories</p>
-                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{stories.length}</h2>
+                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{totalStories}</h2>
               </div>
               <div style={{ padding: '0.5rem', backgroundColor: '#e3fcef', borderRadius: '8px', color: '#006644' }}>
                 <BookOpen size={24} />
               </div>
             </div>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>From {epics.length} epics</p>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>From {totalEpics} epics</p>
           </Card>
 
           <Card style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Active Tasks</p>
-                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{tasks.length}</h2>
+                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{totalTasks}</h2>
               </div>
               <div style={{ padding: '0.5rem', backgroundColor: '#e6f4ff', borderRadius: '8px', color: '#0052cc' }}>
                 <CheckSquare size={24} />
@@ -135,72 +116,62 @@ const DashboardPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Open Bugs</p>
-                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{bugs.filter(b => b.status !== 'DONE').length}</h2>
+                <h2 style={{ margin: '0.25rem 0 0 0', fontSize: '2rem' }}>{openBugs}</h2>
               </div>
               <div style={{ padding: '0.5rem', backgroundColor: '#ffebe6', borderRadius: '8px', color: '#de350b' }}>
                 <Bug size={24} />
               </div>
             </div>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{criticalBugs.length} high priority</p>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>{criticalBugs} high priority</p>
           </Card>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
-          {/* 2. Work Item Distribution */}
+          {/* 2. Work Distribution */}
           <Card>
             <div style={{ padding: '1.5rem' }}>
               <h3 style={{ margin: '0 0 1.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <LayoutDashboard size={20} style={{ color: 'var(--color-primary)' }} /> Work Distribution
               </h3>
 
-              {totalWorkItems === 0 ? (
+              {totalWork === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-bg-panel)', borderRadius: '8px', border: '1px dashed var(--color-border)' }}>
                   <p style={{ margin: 0, fontSize: '0.95rem' }}>No active work items to display.</p>
                 </div>
               ) : (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                    <span>Total Items: <strong>{totalWorkItems}</strong></span>
+                    <span>Total Items: <strong>{totalWork}</strong></span>
                   </div>
 
-                  {/* Visual Bar */}
                   <div style={{ display: 'flex', height: '24px', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.5rem', border: '1px solid var(--color-border)' }}>
-                    <div style={{ width: `${todoPct}%`, backgroundColor: '#dfe1e6', transition: 'width 0.3s ease' }} title={`To Do: ${todoCount}`} />
-                    <div style={{ width: `${inProgressPct}%`, backgroundColor: '#0052cc', transition: 'width 0.3s ease' }} title={`In Progress: ${inProgressCount}`} />
-                    <div style={{ width: `${donePct}%`, backgroundColor: '#00875a', transition: 'width 0.3s ease' }} title={`Done: ${doneCount}`} />
+                    <div style={{ width: `${todoPct}%`, backgroundColor: '#dfe1e6', transition: 'width 0.3s ease' }} title={`To Do: ${workDistribution.todo}`} />
+                    <div style={{ width: `${ipPct}%`,   backgroundColor: '#0052cc', transition: 'width 0.3s ease' }} title={`In Progress / In Review: ${workDistribution.inProgress}`} />
+                    <div style={{ width: `${donePct}%`, backgroundColor: '#00875a', transition: 'width 0.3s ease' }} title={`Done: ${workDistribution.done}`} />
                   </div>
 
-                  {/* Legend */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: '#dfe1e6' }} />
-                        <span style={{ fontSize: '0.9rem' }}>To Do / New</span>
+                    {[
+                      { label: 'To Do / New',           count: workDistribution.todo,        pct: todoPct,  color: '#dfe1e6' },
+                      { label: 'In Progress / Review',  count: workDistribution.inProgress,  pct: ipPct,    color: '#0052cc' },
+                      { label: 'Done / Closed',         count: workDistribution.done,        pct: donePct,  color: '#00875a' },
+                    ].map(row => (
+                      <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <div style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: row.color }} />
+                          <span style={{ fontSize: '0.9rem' }}>{row.label}</span>
+                        </div>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{row.count} ({row.pct.toFixed(0)}%)</span>
                       </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{todoCount} ({todoPct.toFixed(0)}%)</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: '#0052cc' }} />
-                        <span style={{ fontSize: '0.9rem' }}>In Progress / Review</span>
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{inProgressCount} ({inProgressPct.toFixed(0)}%)</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: '#00875a' }} />
-                        <span style={{ fontSize: '0.9rem' }}>Done / Closed</span>
-                      </div>
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{doneCount} ({donePct.toFixed(0)}%)</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
           </Card>
 
-          {/* 4. Overall Execution Health */}
+          {/* 3. Execution Health */}
           <Card>
             <div style={{ padding: '1.5rem' }}>
               <h3 style={{ margin: '0 0 1.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -208,29 +179,41 @@ const DashboardPage: React.FC = () => {
               </h3>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ padding: '1rem 1.25rem', backgroundColor: criticalBugs.length > 0 ? '#fff1f0' : '#f6ffed', border: `1px solid ${criticalBugs.length > 0 ? '#ffa39e' : '#b7eb8f'}`, borderRadius: '8px', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ color: criticalBugs.length > 0 ? '#f5222d' : '#52c41a' }}>
-                    {criticalBugs.length > 0 ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
+                <div style={{
+                  padding: '1rem 1.25rem',
+                  backgroundColor: criticalBugs > 0 ? '#fff1f0' : '#f6ffed',
+                  border: `1px solid ${criticalBugs > 0 ? '#ffa39e' : '#b7eb8f'}`,
+                  borderRadius: '8px',
+                  display: 'flex', gap: '1rem', alignItems: 'center',
+                }}>
+                  <div style={{ color: criticalBugs > 0 ? '#f5222d' : '#52c41a' }}>
+                    {criticalBugs > 0 ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--color-text-primary)' }}>Bug</h4>
+                    <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--color-text-primary)' }}>Bug Quality</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                      {criticalBugs.length > 0
-                        ? `${criticalBugs.length} Critical/High priority bugs need immediate attention.`
+                      {criticalBugs > 0
+                        ? `${criticalBugs} Critical/High priority bug${criticalBugs > 1 ? 's' : ''} need immediate attention.`
                         : 'No critical bugs currently open. Quality is stable.'}
                     </p>
                   </div>
                 </div>
 
-                <div style={{ padding: '1rem 1.25rem', backgroundColor: unassignedBacklog.length > 5 ? '#fffbe6' : '#f6ffed', border: `1px solid ${unassignedBacklog.length > 5 ? '#ffe58f' : '#b7eb8f'}`, borderRadius: '8px', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ color: unassignedBacklog.length > 5 ? '#faad14' : '#52c41a' }}>
-                    {unassignedBacklog.length > 5 ? <Clock size={24} /> : <CheckCircle size={24} />}
+                <div style={{
+                  padding: '1rem 1.25rem',
+                  backgroundColor: unassignedBacklog > 5 ? '#fffbe6' : '#f6ffed',
+                  border: `1px solid ${unassignedBacklog > 5 ? '#ffe58f' : '#b7eb8f'}`,
+                  borderRadius: '8px',
+                  display: 'flex', gap: '1rem', alignItems: 'center',
+                }}>
+                  <div style={{ color: unassignedBacklog > 5 ? '#faad14' : '#52c41a' }}>
+                    {unassignedBacklog > 5 ? <Clock size={24} /> : <CheckCircle size={24} />}
                   </div>
                   <div>
                     <h4 style={{ margin: '0 0 0.25rem 0', color: 'var(--color-text-primary)' }}>Backlog Readiness</h4>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                      {unassignedBacklog.length > 0
-                        ? `${unassignedBacklog.length} items in the backlog lack an assignee.`
+                      {unassignedBacklog > 0
+                        ? `${unassignedBacklog} item${unassignedBacklog > 1 ? 's' : ''} in the backlog lack an assignee.`
                         : 'Backlog items are well assigned and planned.'}
                     </p>
                   </div>
@@ -240,36 +223,42 @@ const DashboardPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* 3. Epic Progress */}
+        {/* 4. Epic Progress */}
         <Card>
           <div style={{ padding: '1.5rem' }}>
             <h3 style={{ margin: '0 0 1.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Target size={20} style={{ color: 'var(--color-primary)' }} /> Active Epic Progress
             </h3>
 
-            {activeEpics.length === 0 ? (
+            {epicProgress.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-bg-panel)', borderRadius: '8px', border: '1px dashed var(--color-border)' }}>
                 <p style={{ margin: 0, fontSize: '0.95rem' }}>No active epics in progress.</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {activeEpics.map(epic => (
+                {epicProgress.map(epic => (
                   <div key={epic.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{epic.name}</span>
-                        {epic.owner && <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Owner: {epic.owner.firstName} {epic.owner.lastName}</span>}
+                        {epic.owner && (
+                          <span style={{ marginLeft: '0.75rem', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                            Owner: {epic.owner.firstName} {epic.owner.lastName}
+                          </span>
+                        )}
                       </div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>{epic.completionPercentage || 0}%</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                        {epic.completionPercentage}%
+                      </span>
                     </div>
 
                     <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--color-neutral-200)', borderRadius: '4px', overflow: 'hidden' }}>
                       <div
                         style={{
                           height: '100%',
-                          width: `${epic.completionPercentage || 0}%`,
-                          backgroundColor: (epic.completionPercentage || 0) === 100 ? '#00875a' : '#0052cc',
-                          transition: 'width 0.5s ease-out'
+                          width: `${epic.completionPercentage}%`,
+                          backgroundColor: epic.completionPercentage === 100 ? '#00875a' : '#0052cc',
+                          transition: 'width 0.5s ease-out',
                         }}
                       />
                     </div>

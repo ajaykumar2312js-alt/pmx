@@ -97,7 +97,7 @@
   border-radius: 6px;
   font-size: 0.875rem;
   resize: vertical;
-  background: #fff;
+  background: white;
   color: var(--color-neutral-900);
   font-family: inherit;
   transition: border-color 0.15s;

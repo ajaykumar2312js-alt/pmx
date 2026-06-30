@@ -11,15 +11,13 @@ export const BacklogFilter: React.FC<BacklogFilterProps> = ({ onFilterChange }) 
   const [search, setSearch] = useState('');
   const [priority, setPriority] = useState('');
   const [status, setStatus] = useState('');
-  const [epicId, setEpicId] = useState(''); // Epics will be populated dynamically in E7
 
   const handleApply = () => {
     onFilterChange({
       search: search || undefined,
       priority: priority || undefined,
       status: status || undefined,
-      epicId: epicId || undefined,
-      cursor: undefined // reset cursor on new filter
+      cursor: undefined
     });
   };
 
@@ -27,12 +25,10 @@ export const BacklogFilter: React.FC<BacklogFilterProps> = ({ onFilterChange }) 
     setSearch('');
     setPriority('');
     setStatus('');
-    setEpicId('');
     onFilterChange({
       search: undefined,
       priority: undefined,
       status: undefined,
-      epicId: undefined,
       cursor: undefined
     });
   };
@@ -81,22 +77,7 @@ export const BacklogFilter: React.FC<BacklogFilterProps> = ({ onFilterChange }) 
             { label: 'All Statuses', value: '' },
             { label: 'New', value: 'New' },
             { label: 'Ready', value: 'Ready' },
-            { label: 'Refined', value: 'Refined' },
             { label: 'Closed', value: 'Closed' },
-          ]}
-        />
-      </div>
-
-      <div style={{ flex: 1 }}>
-        <Select 
-          label="Epic" 
-          value={epicId} 
-          onChange={(e) => setEpicId(e.target.value)}
-          options={[
-            { label: 'All Epics', value: '' },
-            // Mocks until Epic list is available (E7)
-            { label: 'Mock Epic A', value: 'mock-epic-a' },
-            { label: 'Mock Epic B', value: 'mock-epic-b' },
           ]}
         />
       </div>

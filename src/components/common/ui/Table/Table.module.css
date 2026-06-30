@@ -2,7 +2,7 @@
   width: 100%;
   overflow-x: auto;
   background: white;
-  border-radius: 3px;
+  border-radius: var(--border-radius-xs);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-sm);
 }
@@ -15,7 +15,7 @@
 }
 
 .th, .td {
-  padding: 10px var(--spacing-4);
+  padding: var(--spacing-2-5) var(--spacing-4);
   border-bottom: 1px solid var(--color-neutral-200);
 }
 
@@ -39,7 +39,7 @@
 }
 
 .tr.selected .td {
-  background-color: #deebff;
+  background-color: var(--color-status-blue-bg);
 }
 
 .emptyState {
@@ -71,7 +71,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
+  padding: var(--spacing-1);
   border-radius: var(--border-radius-sm);
   display: flex;
   align-items: center;
@@ -88,7 +88,7 @@
 }
 
 .expansionRow .td {
-  background-color: #fafafa;
+  background-color: var(--color-neutral-100);
   padding: var(--spacing-4) var(--spacing-6);
   border-bottom: 1px solid var(--color-neutral-200);
 }

@@ -3,7 +3,7 @@ import { Modal, Input, TextArea, Select, Button, Alert } from '../common';
 import { useAppDispatch } from '../../redux/hooks';
 import { createBacklogItem } from '../../redux/slices/backlogSlice';
 import { enqueueToast } from '../../redux/slices/uiSlice';
-import { Priority } from '../../common/enums';
+import { Priority, WorkItemType } from '../../common/enums';
 import { BacklogItemStatus } from '../../services/backlogService';
 
 interface CreateBacklogItemModalProps {
@@ -17,6 +17,7 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>(Priority.MEDIUM);
   const [businessValue, setBusinessValue] = useState<string>('');
+  const [type, setType] = useState<WorkItemType | ''>('');
   
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
           priority,
           businessValue: businessValue ? parseInt(businessValue, 10) : undefined,
           status: 'New' as BacklogItemStatus,
+          type: type || undefined,
         }
       })).unwrap();
       
@@ -96,6 +98,20 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
                 { label: 'Medium', value: Priority.MEDIUM },
                 { label: 'High', value: Priority.HIGH },
                 { label: 'Critical', value: Priority.CRITICAL },
+              ]}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <Select 
+              label="Type (Label)" 
+              value={type} 
+              onChange={(e) => setType(e.target.value as WorkItemType | '')}
+              options={[
+                { label: 'Unassigned', value: '' },
+                { label: 'Epic', value: WorkItemType.EPIC },
+                { label: 'Story', value: WorkItemType.STORY },
+                { label: 'Task', value: WorkItemType.TASK },
+                { label: 'Bug', value: WorkItemType.BUG },
               ]}
             />
           </div>

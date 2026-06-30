@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchBacklogItems, selectBacklogItems, selectBacklogStatus, selectBacklogMeta, selectSelectedIds, toggleSelection, selectAll, optimisticReorder, reorderBacklogItem } from '../../redux/slices/backlogSlice';
+import { updateBacklogItem, fetchBacklogItems, selectBacklogItems, selectBacklogStatus, selectBacklogMeta, selectSelectedIds, toggleSelection, selectAll, optimisticReorder, reorderBacklogItem, deleteBacklogItem } from '../../redux/slices/backlogSlice';
 import { BacklogRow } from './BacklogRow';
 import { SortableList } from '../common/ui/DragDrop';
 import { Spinner, Alert, Pagination, Checkbox } from '../common';
-import { BacklogItem } from '../../services/backlogService';
+import { BacklogItem, BacklogItemStatus } from '../../services/backlogService';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 
 interface BacklogListProps {
   projectId: string;
-  onRefineItem: (id: string) => void;
+  onEditItem: (id: string) => void;
 }
 
-export const BacklogList: React.FC<BacklogListProps> = ({ projectId, onRefineItem }) => {
+export const BacklogList: React.FC<BacklogListProps> = ({ projectId, onEditItem }) => {
   const dispatch = useAppDispatch();
   const allItems = useAppSelector(selectBacklogItems);
   const items = allItems.filter(item => !item.sprintId);
@@ -71,6 +71,15 @@ export const BacklogList: React.FC<BacklogListProps> = ({ projectId, onRefineIte
     dispatch(selectAll(selectedIds.length !== items.length));
   };
 
+  const handleStatusChange = async (id: string, newStatus: BacklogItemStatus) => {
+    try {
+      await dispatch(updateBacklogItem({ itemId: id, payload: { status: newStatus } })).unwrap();
+      dispatch(enqueueToast({ message: 'Status updated', severity: 'success' }));
+    } catch (err: unknown) {
+      dispatch(enqueueToast({ message: 'Failed to update status', severity: 'error' }));
+    }
+  };
+
   if (status === 'loading' && items.length === 0) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}><Spinner /></div>;
   }
@@ -78,28 +87,35 @@ export const BacklogList: React.FC<BacklogListProps> = ({ projectId, onRefineIte
   return (
     <div>
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr 100px 100px 100px 150px auto',
-        gap: '1rem',
-        padding: '0.75rem 1rem 0.75rem 3.5rem', // Offset for drag handle
+        display: 'flex',
+        alignItems: 'stretch',
         background: 'var(--color-neutral-100)',
         borderBottom: '2px solid var(--color-neutral-200)',
         fontWeight: 600,
         fontSize: '0.875rem'
       }}>
-        <div>
-          <Checkbox 
-            label="All"
-            checked={items.length > 0 && selectedIds.length === items.length}
-            onChange={handleToggleAll}
-          />
+        <div style={{ width: '40px', flexShrink: 0 }} />
+        <div style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr 100px 100px 100px auto',
+          gap: '1rem',
+          alignItems: 'center',
+          padding: '0.75rem 1rem',
+        }}>
+          <div>
+            <Checkbox 
+              label="All"
+              checked={items.length > 0 && selectedIds.length === items.length}
+              onChange={handleToggleAll}
+            />
+          </div>
+          <div>Title</div>
+          <div>Type</div>
+          <div>Priority</div>
+          <div>Status</div>
+          <div>Actions</div>
         </div>
-        <div>Title</div>
-        <div>Type</div>
-        <div>Priority</div>
-        <div>Status</div>
-        <div>Epic</div>
-        <div>Actions</div>
       </div>
 
       {items.length === 0 ? (
@@ -116,7 +132,18 @@ export const BacklogList: React.FC<BacklogListProps> = ({ projectId, onRefineIte
               item={item}
               isSelected={selectedIds.includes(item.id)}
               onToggleSelection={(id) => dispatch(toggleSelection(id))}
-              onRefineClick={onRefineItem}
+              onEditClick={onEditItem}
+              onStatusChange={handleStatusChange}
+              onDeleteClick={async (id, title) => {
+                if (window.confirm(`Are you sure you want to delete Backlog Item "${title}"?`)) {
+                  try {
+                    await dispatch(deleteBacklogItem(id)).unwrap();
+                    dispatch(enqueueToast({ message: 'Item deleted', severity: 'success' }));
+                  } catch (err: unknown) {
+                    dispatch(enqueueToast({ message: (err as string) || 'Failed to delete item', severity: 'error' }));
+                  }
+                }
+              }}
             />
           )}
         />

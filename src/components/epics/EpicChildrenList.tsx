@@ -1,12 +1,16 @@
 import React from 'react';
 import { useAppSelector } from '../../redux/hooks';
-import { selectStories } from '../../redux/slices/storySlice';
-import { selectTasks } from '../../redux/slices/taskSlice';
-import { selectBugs } from '../../redux/slices/bugSlice';
-import { FileText, CheckSquare, Bug } from 'lucide-react';
+import { selectStories, deleteStory } from '../../redux/slices/storySlice';
+import { selectTasks, deleteTask } from '../../redux/slices/taskSlice';
+import { selectBugs, deleteBug } from '../../redux/slices/bugSlice';
+import { FileText, CheckSquare, Bug, Trash2, Edit2 } from 'lucide-react';
 import { Avatar, Badge } from '../common';
 import { SubtaskList } from '../subtasks/SubtaskList';
+import { useNavigate } from 'react-router-dom';
+import { RoutePaths } from '../../routes/routePaths';
 import { Priority, Severity } from '../../common/enums';
+import { enqueueToast } from '../../redux/slices/uiSlice';
+import { useAppDispatch } from '../../redux/hooks';
 
 interface EpicChildrenListProps {
   epicId: string;
@@ -19,6 +23,8 @@ interface Assignee {
 }
 
 export const EpicChildrenList: React.FC<EpicChildrenListProps> = ({ epicId }) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const stories = useAppSelector(selectStories).filter(s => s.epicId === epicId);
   const tasks = useAppSelector(selectTasks).filter(t => t.epicId === epicId);
   const bugs = useAppSelector(selectBugs).filter(b => b.parentType === 'EPIC' && b.parentId === epicId);
@@ -84,19 +90,56 @@ export const EpicChildrenList: React.FC<EpicChildrenListProps> = ({ epicId }) =>
               {title}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
-            <div style={{ width: '120px' }}>{renderAssignee(assignee)}</div>
-            <div style={{ width: '80px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+            <div style={{ minWidth: '120px' }}>{renderAssignee(assignee)}</div>
+            <div style={{ minWidth: '72px', display: 'flex', justifyContent: 'center' }}>
               {priority && <Badge level={priority} />}
             </div>
-            <div style={{ width: '100px', display: 'flex', justifyContent: 'flex-end' }}>
-              <span style={{ 
-                fontSize: '0.75rem', fontWeight: 600, padding: '3px 8px', 
-                borderRadius: '999px', textTransform: 'uppercase', 
-                backgroundColor: statusStyle.bg, color: statusStyle.text 
+            <div style={{ minWidth: '110px', display: 'flex', justifyContent: 'flex-start' }}>
+              <span style={{
+                fontSize: '0.75rem', fontWeight: 600, padding: '3px 8px',
+                borderRadius: '999px', textTransform: 'uppercase', whiteSpace: 'nowrap',
+                backgroundColor: statusStyle.bg, color: statusStyle.text
               }}>
                 {status.replace('_', ' ')}
               </span>
+            </div>
+            <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+              <button
+                onClick={() => {
+                  if (type === 'story') navigate(RoutePaths.STORY_DETAIL(id));
+                  else if (type === 'task') navigate(RoutePaths.TASK_DETAIL(id));
+                  else if (type === 'bug') navigate(RoutePaths.BUG_DETAIL(id));
+                }}
+                style={{
+                  background: 'none', border: 'none', color: 'var(--color-neutral-500)',
+                  cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+                }}
+                title={`Edit ${type}`}
+              >
+                <Edit2 size={16} />
+              </button>
+              <button
+                onClick={async () => {
+                  if (window.confirm(`Are you sure you want to delete ${type} "${title}"?`)) {
+                    try {
+                      if (type === 'story') await dispatch(deleteStory(id)).unwrap();
+                      if (type === 'task') await dispatch(deleteTask(id)).unwrap();
+                      if (type === 'bug') await dispatch(deleteBug(id)).unwrap();
+                      dispatch(enqueueToast({ message: `${type} deleted`, severity: 'success' }));
+                    } catch (err: unknown) {
+                      dispatch(enqueueToast({ message: (err as string) || `Failed to delete ${type}`, severity: 'error' }));
+                    }
+                  }
+                }}
+                style={{
+                  background: 'none', border: 'none', color: 'var(--color-text-danger)',
+                  cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center'
+                }}
+                title={`Delete ${type}`}
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           </div>
         </div>

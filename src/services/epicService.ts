@@ -1,8 +1,8 @@
-import { get, post, patch, buildPaginationParams, PaginationParams } from './apiClient';
+import { get, post, patch, del, buildPaginationParams, PaginationParams } from './apiClient';
 import { PaginationMeta } from '../common/types';
 import { WorkItemType, Priority } from '../common/enums';
 
-export type EpicStatus = 'Open' | 'In Progress' | 'Done' | 'Cancelled';
+export type EpicStatus = 'To Do' | 'In Progress' | 'In Review' | 'Done';
 
 export interface Epic {
   id: string;
@@ -63,5 +63,9 @@ export const epicService = {
   getChildren: async (id: string) => {
     const res = await get<ChildItem[]>(`/api/v1/epics/${id}/children`);
     return res.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await del(`/api/v1/epics/${id}`);
   }
 };

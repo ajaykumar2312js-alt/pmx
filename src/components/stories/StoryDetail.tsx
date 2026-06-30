@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchStoryDetail, selectCurrentStory, selectStoryDetailStatus, updateStory } from '../../redux/slices/storySlice';
+import { fetchStoryDetail, selectCurrentStory, selectStoryDetailStatus, updateStory, deleteStory } from '../../redux/slices/storySlice';
 import { Card, Spinner, Alert, Button } from '../common';
 import { AcceptanceCriteriaEditor } from './AcceptanceCriteriaEditor/AcceptanceCriteriaEditor';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { InlineEdit, WorkflowStatusDropdown } from '../common/ui';
-import { SplitStoryModal } from './SplitStoryModal';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { ACEntry, StoryPayload } from '../../services/storyService';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
-import { Scissors } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { SubtaskList } from '../subtasks/SubtaskList';
 
 
@@ -25,7 +24,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ storyId }) => {
   const status = useAppSelector(selectStoryDetailStatus);
   const users = useAppSelector(selectUsers);
   const [isEditingAC, setIsEditingAC] = useState(false);
-  const [isSplitting, setIsSplitting] = useState(false);
   const [tempAC, setTempAC] = useState<ACEntry[]>([]);
 
   useEffect(() => {
@@ -96,8 +94,22 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ storyId }) => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <Button variant="ghost" size="sm" onClick={() => setIsSplitting(true)}>
-              <Scissors size={14} style={{ marginRight: '0.25rem' }} /> Split
+            <Button
+              variant="secondary" 
+              size="sm" 
+              onClick={async () => {
+                if (window.confirm(`Are you sure you want to delete Story "${story.title}"?`)) {
+                  try {
+                    await dispatch(deleteStory(story.id)).unwrap();
+                    dispatch(enqueueToast({ message: 'Story deleted', severity: 'success' }));
+                    navigate(RoutePaths.STORIES);
+                  } catch {
+                    dispatch(enqueueToast({ message: 'Failed to delete story', severity: 'error' }));
+                  }
+                }
+              }}
+            >
+              <Trash2 size={14} style={{ marginRight: '0.25rem', color: 'var(--color-danger)' }} /> Delete
             </Button>
           </div>
         </div>
@@ -177,26 +189,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ storyId }) => {
         <SubtaskList parentType="stories" parentId={story.id} />
       </Card>
 
-      {/* Child stories (from split) */}
-      {story.childStories && story.childStories.length > 0 && (
-        <Card style={{ padding: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 1rem' }}>Child Stories ({story.childStories.length})</h3>
-          {story.childStories.map(child => (
-            <div key={child.id} style={{ padding: '0.625rem', borderBottom: '1px solid var(--color-neutral-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.9375rem' }}>{child.title}</span>
-            </div>
-          ))}
-        </Card>
-      )}
-
-      {/* Split modal */}
-      {isSplitting && (
-        <SplitStoryModal
-          storyId={story.id}
-          storyTitle={story.title}
-          onClose={() => setIsSplitting(false)}
-        />
-      )}
     </div>
   );
 };

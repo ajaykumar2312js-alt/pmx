@@ -12,7 +12,8 @@ import {
   Users, 
   LogOut,
   CheckSquare,
-  Bug 
+  Bug,
+  Activity
 } from 'lucide-react';
 import { RoutePaths } from '../../routes/routePaths';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
@@ -191,6 +192,13 @@ export const Sidebar: React.FC = () => {
             >
               <Users className={styles.navIcon} />
               <span>Users</span>
+            </Link>
+            <Link
+              to={RoutePaths.AUDIT_LOGS}
+              className={`${styles.navItem} ${isActive(RoutePaths.AUDIT_LOGS) ? styles.navItemActive : ''}`}
+            >
+              <Activity className={styles.navIcon} />
+              <span>Audit Logs</span>
             </Link>
           </>
         )}

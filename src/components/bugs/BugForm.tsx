@@ -3,6 +3,7 @@ import { FormField, Input, Select, Button, TextArea } from '../common/ui';
 import { ParentItemSelector } from './ParentItemSelector';
 import { BugPayload } from '../../services/bugService';
 import { Severity, Priority } from '../../common/enums';
+import { DEFAULT_STATUS } from '../../common/kanbanStatuses';
 
 interface BugFormProps {
   projectId: string;
@@ -57,7 +58,7 @@ export const BugForm: React.FC<BugFormProps> = ({ projectId, initialData, onSubm
         browserOs,
         parentId: parent?.id || undefined,
         parentType: parent?.type || undefined,
-        status: initialData?.status || 'TODO',
+        status: initialData?.status || DEFAULT_STATUS,
       });
     } catch (err: unknown) {
       const e = err as Error;

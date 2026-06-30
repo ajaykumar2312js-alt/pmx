@@ -1,4 +1,4 @@
-import { get, post, patch, buildPaginationParams, PaginationParams } from './apiClient';
+import { get, post, patch, del, buildPaginationParams, PaginationParams } from './apiClient';
 import { PaginationMeta } from '../common/types';
 import { Severity, Priority } from '../common/enums';
 
@@ -72,5 +72,9 @@ export const bugService = {
   transition: async (id: string, action: string, reason?: string) => {
     const res = await post<Bug>(`/api/v1/bugs/${id}/transition`, { action, reason });
     return res.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await del(`/api/v1/bugs/${id}`);
   }
 };

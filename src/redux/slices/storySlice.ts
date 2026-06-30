@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { storyService, Story, StoryPayload, StoryListParams, SplitPayload } from '../../services/storyService';
+import { storyService, Story, StoryPayload, StoryListParams } from '../../services/storyService';
 import { PaginationMeta } from '../../common/types';
 
 interface StoryState {
@@ -56,10 +56,17 @@ export const changeStoryStatus = createAsyncThunk(
     wrap(() => storyService.changeStatus(id, status), rejectWithValue as (v: string) => unknown)
 );
 
-export const splitStory = createAsyncThunk(
-  'stories/splitStory',
-  async ({ id, payload }: { id: string; payload: SplitPayload }, { rejectWithValue }) =>
-    wrap(() => storyService.split(id, payload), rejectWithValue as (v: string) => unknown)
+export const deleteStory = createAsyncThunk(
+  'stories/deleteStory',
+  async (id: string, { rejectWithValue }) => {
+    try {
+      await storyService.delete(id);
+      return id;
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      return rejectWithValue(err.message || 'Failed to delete story');
+    }
+  }
 );
 
 const upsertInList = (items: Story[], story: Story) => {
@@ -115,13 +122,11 @@ const storySlice = createSlice({
           state.currentStory = action.payload as Story;
         }
       })
-      // split
-      .addCase(splitStory.fulfilled, (state, action) => {
-        const { parentStory, childStories } = action.payload as { parentStory: Story; childStories: Story[] };
-        upsertInList(state.items, parentStory);
-        childStories.forEach(c => state.items.unshift(c));
-        if (state.currentStory?.id === parentStory.id) {
-          state.currentStory = parentStory;
+      // delete
+      .addCase(deleteStory.fulfilled, (state, action) => {
+        state.items = state.items.filter(s => s.id !== action.payload);
+        if (state.currentStory?.id === action.payload) {
+          state.currentStory = null;
         }
       });
   },

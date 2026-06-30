@@ -107,46 +107,101 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, isActive, onS
             </p>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', marginTop: 'auto' }}>
-            <span 
-              style={{ 
-                fontSize: 'var(--font-size-xs)', 
-                color: 'var(--color-neutral-500)', 
-                fontWeight: 600, 
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}
-            >
-              Owner
-            </span>
-            <div 
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '6px', 
-                backgroundColor: 'var(--color-neutral-50)', 
-                padding: '4px 8px', 
-                borderRadius: '3px',
-                border: '1px solid var(--color-neutral-200)',
-                minWidth: 0,
-              }}
-            >
-              <Avatar 
-                name={project.po ? `${project.po.firstName} ${project.po.lastName}` : 'Unassigned'} 
-                size={18} 
-              />
-              <span 
-                style={{ 
-                  fontSize: 'var(--font-size-xs)', 
-                  fontWeight: 500, 
-                  color: 'var(--color-neutral-800)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+              <span
+                style={{
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-neutral-500)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  minWidth: '46px',
                 }}
               >
-                {project.po ? `${project.po.firstName} ${project.po.lastName}` : 'Unassigned'}
+                Owner
               </span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: 'var(--color-neutral-50)',
+                  padding: '4px 8px',
+                  borderRadius: '3px',
+                  border: '1px solid var(--color-neutral-200)',
+                  minWidth: 0,
+                }}
+              >
+                <Avatar
+                  name={project.po ? `${project.po.firstName} ${project.po.lastName}` : 'Unassigned'}
+                  size={18}
+                />
+                <span
+                  style={{
+                    fontSize: 'var(--font-size-xs)',
+                    fontWeight: 500,
+                    color: 'var(--color-neutral-800)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {project.po ? `${project.po.firstName} ${project.po.lastName}` : 'Unassigned'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+              <span
+                style={{
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-neutral-500)',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  minWidth: '46px',
+                }}
+              >
+                Team
+              </span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: 'var(--color-neutral-50)',
+                  padding: '4px 8px',
+                  borderRadius: '3px',
+                  border: '1px solid var(--color-neutral-200)',
+                }}
+              >
+                {project.team && project.team.length > 0 ? (
+                  <>
+                    {project.team.slice(0, 3).map(member => (
+                      <Avatar
+                        key={member.id}
+                        name={`${member.firstName} ${member.lastName}`}
+                        size={18}
+                      />
+                    ))}
+                    <span
+                      style={{
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 500,
+                        color: 'var(--color-neutral-800)',
+                        marginLeft: '2px',
+                      }}
+                    >
+                      {project.team.length} member{project.team.length !== 1 ? 's' : ''}
+                    </span>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-500)', fontStyle: 'italic' }}>
+                    No members
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </CardBody>

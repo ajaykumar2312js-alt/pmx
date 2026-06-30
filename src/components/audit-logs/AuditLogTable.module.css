@@ -1,0 +1,185 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tableScroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background-color: var(--color-neutral-100);
+  padding: var(--spacing-3) var(--spacing-4);
+  font-weight: 700;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-neutral-500);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.row {
+  border-bottom: 1px solid var(--color-neutral-200);
+  transition: background-color 0.15s;
+}
+
+.row:hover {
+  background-color: var(--color-neutral-100);
+}
+
+.table td {
+  padding: var(--spacing-3) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
+  vertical-align: middle;
+}
+
+.userCell {
+  white-space: nowrap;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-weight: 500;
+}
+
+.systemUser {
+  color: var(--color-neutral-400);
+  font-style: italic;
+}
+
+.actionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.create {
+  background-color: var(--color-status-green-bg);
+  color: var(--color-status-green-fg);
+}
+
+.update {
+  background-color: var(--color-status-blue-bg);
+  color: var(--color-status-blue-fg);
+}
+
+.delete {
+  background-color: var(--color-status-red-bg);
+  color: var(--color-status-red-fg);
+}
+
+.entityCell {
+  font-weight: 500;
+}
+
+.idCell {
+  font-family: monospace;
+  color: var(--color-neutral-500);
+}
+
+.changesCell {
+  max-width: 300px;
+}
+
+.noChanges {
+  color: var(--color-neutral-400);
+}
+
+.changesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.changeItem {
+  display: flex;
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.changeKey {
+  font-weight: 600;
+  color: var(--color-neutral-600);
+  margin-right: var(--spacing-1);
+}
+
+.changeValue {
+  color: var(--color-neutral-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.moreChanges {
+  font-size: var(--font-size-xs);
+  color: var(--color-info);
+  font-weight: 500;
+}
+
+.timeCell {
+  white-space: nowrap;
+  color: var(--color-neutral-500);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4);
+  border-top: 1px solid var(--color-neutral-200);
+  background-color: white;
+}
+
+.pageButton {
+  padding: var(--spacing-1-5) var(--spacing-3);
+  border: 1px solid var(--color-neutral-300);
+  background-color: white;
+  border-radius: var(--border-radius-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageButton:hover:not(:disabled) {
+  background-color: var(--color-neutral-100);
+  border-color: var(--color-neutral-400);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-500);
+}
+
+.loading, .empty {
+  padding: var(--spacing-8);
+  text-align: center;
+  color: var(--color-neutral-500);
+  background: white;
+  border-radius: var(--border-radius-base);
+  box-shadow: var(--shadow-sm);
+}

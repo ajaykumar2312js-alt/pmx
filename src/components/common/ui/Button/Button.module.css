@@ -5,7 +5,7 @@
   gap: var(--spacing-2);
   font-family: inherit;
   font-weight: 500;
-  border-radius: var(--border-radius-base); /* 3px */
+  border-radius: var(--border-radius-xs);
   border: 1px solid transparent;
   cursor: pointer;
   transition: background-color 0.1s ease-out, border-color 0.1s ease-out;
@@ -27,21 +27,21 @@
 
 /* Sizes (Jira-aligned compact design) */
 .sm {
-  height: 28px;
-  padding: 0 var(--spacing-2);
+  padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-xs);
+  line-height: 1.4;
 }
 
 .md {
-  height: 32px;
-  padding: 0 var(--spacing-3);
+  padding: var(--spacing-1-5) var(--spacing-3);
   font-size: var(--font-size-sm);
+  line-height: 1.4;
 }
 
 .lg {
-  height: 40px;
-  padding: 0 var(--spacing-4);
+  padding: var(--spacing-2) var(--spacing-4);
   font-size: var(--font-size-base);
+  line-height: 1.4;
 }
 
 /* Variants */
@@ -53,7 +53,7 @@
   background-color: var(--color-primary-hover);
 }
 .primary:active:not(:disabled) {
-  background-color: #5b21b6;
+  background-color: var(--color-primary-active);
 }
 
 .secondary {
@@ -77,7 +77,7 @@
   background-color: var(--color-danger-hover);
 }
 .danger:active:not(:disabled) {
-  background-color: #e53e3e;
+  background-color: var(--color-danger-active);
 }
 
 .ghost {

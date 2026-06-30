@@ -4,13 +4,14 @@ import { fetchTasks, selectTasks, selectTaskMeta, selectTaskStatus } from '../..
 import { selectActiveProject } from '../../redux/slices/projectSlice';
 import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
-import { Table, Button, Avatar, Select, Column, Pagination, Input, WorkflowStatusDropdown } from '../common/ui';
+import { Table, Button, Avatar, Select, Column, Pagination, Input, ItemStatusDropdown } from '../common/ui';
+import { Edit2, Trash2 } from 'lucide-react';
 import { workflowStatusFilterOptions, assigneeFilterOptions, epicFilterOptions, UNASSIGNED_VALUE } from '../../common/filterOptions';
 import { useNavigate } from 'react-router-dom';
 import { RoutePaths } from '../../routes/routePaths';
 import { TaskForm } from './TaskForm';
 import { Modal } from '../common/ui';
-import { createTask, updateTaskStatus } from '../../redux/slices/taskSlice';
+import { createTask, deleteTask } from '../../redux/slices/taskSlice';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { TaskPayload, Task } from '../../services/taskService';
 import { SubtaskList } from '../subtasks/SubtaskList';
@@ -34,6 +35,8 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [cursor, setCursor] = useState<string | undefined>();
+  const [direction, setDirection] = useState<'next' | 'prev' | undefined>();
 
   useEffect(() => {
     dispatch(fetchEpics({ projectId, params: { limit: 100 } }));
@@ -41,15 +44,16 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
   }, [dispatch, projectId]);
 
   useEffect(() => {
-    dispatch(fetchTasks({ 
-      projectId, 
-      params: { 
-        page: 1, 
-        limit: 20, 
-        status: filterStatus || undefined 
-      } 
+    dispatch(fetchTasks({
+      projectId,
+      params: {
+        limit: 20,
+        cursor,
+        direction,
+        status: filterStatus || undefined,
+      }
     }));
-  }, [dispatch, projectId, filterStatus]);
+  }, [dispatch, projectId, filterStatus, cursor, direction]);
 
   const handleCreateSubmit = async (payload: TaskPayload) => {
     await dispatch(createTask({ projectId, payload })).unwrap();
@@ -95,11 +99,10 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
       header: 'Status', 
       render: (row) => {
         return (
-          <WorkflowStatusDropdown
-            value={row.status}
-            onChange={(newVal) => {
-              dispatch(updateTaskStatus({ id: row.id, status: newVal as string }));
-            }}
+          <ItemStatusDropdown
+            itemId={row.id}
+            itemType="TASK"
+            status={row.status}
           />
         );
       }
@@ -113,7 +116,38 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
       key: 'priority',
       header: 'Priority',
       render: () => '—'
-    }
+    },
+    {
+      key: 'actions',
+      header: '',
+      render: (row) => (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.25rem' }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(RoutePaths.TASK_DETAIL(row.id)); }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-neutral-500)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Edit task"
+          >
+            <Edit2 size={15} />
+          </button>
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              if (!window.confirm(`Delete task "${row.title}"?`)) return;
+              try {
+                await dispatch(deleteTask(row.id)).unwrap();
+                dispatch(enqueueToast({ message: 'Task deleted', severity: 'success' }));
+              } catch {
+                dispatch(enqueueToast({ message: 'Failed to delete task', severity: 'error' }));
+              }
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center' }}
+            title="Delete task"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const filteredTasks = tasks.filter(t => {
@@ -147,8 +181,12 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
           <Select
             label="Status"
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            options={workflowStatusFilterOptions(activeProject?.workflowStatuses || [])}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setCursor(undefined);
+              setDirection(undefined);
+            }}
+            options={workflowStatusFilterOptions()}
           />
         </div>
         <div style={{ width: '200px' }}>
@@ -170,8 +208,8 @@ export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
       />
       <Pagination
         meta={meta}
-        onNext={() => {}}
-        onPrev={() => {}}
+        onNext={() => { setCursor(meta?.nextCursor ?? undefined); setDirection('next'); }}
+        onPrev={() => { setCursor(meta?.prevCursor ?? undefined); setDirection('prev'); }}
       />
 
       {isCreating && (

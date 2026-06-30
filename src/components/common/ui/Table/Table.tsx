@@ -9,6 +9,7 @@ export interface Column<T> {
   key: string;
   header: React.ReactNode;
   render?: (row: T) => React.ReactNode;
+  width?: string | number;
 }
 
 export interface TableProps<T> {
@@ -75,7 +76,12 @@ export function Table<T>({
               </th>
             )}
             {columns.map((col) => (
-              <th key={col.key} className={styles.th} scope="col">
+              <th
+                key={col.key}
+                className={styles.th}
+                scope="col"
+                style={col.width !== undefined ? { width: col.width } : undefined}
+              >
                 {col.header}
               </th>
             ))}

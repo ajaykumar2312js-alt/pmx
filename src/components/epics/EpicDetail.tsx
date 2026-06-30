@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
-import { Card, ProgressBar, Spinner, Alert } from '../common';
+import { Card, ProgressBar, Spinner, Alert, Button } from '../common';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { fetchEpicDetail, selectCurrentEpic, selectEpicDetailStatus, updateEpic } from '../../redux/slices/epicSlice';
+import { fetchEpicDetail, selectCurrentEpic, selectEpicDetailStatus, updateEpic, deleteEpic } from '../../redux/slices/epicSlice';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { EpicPayload } from '../../services/epicService';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { InlineEdit, StatusDropdown } from '../common/ui';
+import { KANBAN_STATUSES } from '../../common/kanbanStatuses';
+import { useNavigate } from 'react-router-dom';
+import { RoutePaths } from '../../routes/routePaths';
+import { Trash2 } from 'lucide-react';
 
 interface EpicDetailProps {
   epicId: string;
@@ -13,6 +17,7 @@ interface EpicDetailProps {
 
 export const EpicDetail: React.FC<EpicDetailProps> = ({ epicId }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const epic = useAppSelector(selectCurrentEpic);
   const status = useAppSelector(selectEpicDetailStatus);
   const users = useAppSelector(selectUsers);
@@ -40,11 +45,11 @@ export const EpicDetail: React.FC<EpicDetailProps> = ({ epicId }) => {
   };
 
   const userOptions = users.map(u => ({ label: `${u.firstName} ${u.lastName}`, value: u.id }));
-  const statusOptions = [
-    { label: 'Planning', value: 'Planning' },
-    { label: 'In Progress', value: 'In Progress' },
-    { label: 'Done', value: 'Done' },
-  ];
+  const statusOptions = KANBAN_STATUSES.map(s => ({ label: s.label, value: s.id }));
+  const statusColorMap = KANBAN_STATUSES.reduce<Record<string, { bg: string; color: string }>>((acc, s) => {
+    acc[s.id] = { bg: s.color.bg, color: s.color.text };
+    return acc;
+  }, {});
 
   return (
     <Card style={{ padding: '1.5rem' }}>
@@ -66,15 +71,30 @@ export const EpicDetail: React.FC<EpicDetailProps> = ({ epicId }) => {
                 value={epic.status}
                 options={statusOptions}
                 onChange={(val) => handleFieldSave('status', val)}
-                colorMap={{
-                  'Planning': { bg: 'var(--color-primary-100)', color: 'var(--color-primary-700)' },
-                  'In Progress': { bg: 'var(--color-warning-100)', color: 'var(--color-warning-700)' },
-                  'Done': { bg: 'var(--color-success-100)', color: 'var(--color-success-700)' },
-                }}
+                colorMap={statusColorMap}
               />
             </div>
             <span>Created {new Date(epic.createdAt).toLocaleDateString()}</span>
           </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={async () => {
+              if (window.confirm(`Are you sure you want to delete Epic "${epic.name}"?`)) {
+                try {
+                  await dispatch(deleteEpic(epic.id)).unwrap();
+                  dispatch(enqueueToast({ message: 'Epic deleted', severity: 'success' }));
+                  navigate(RoutePaths.EPICS);
+                } catch {
+                  dispatch(enqueueToast({ message: 'Failed to delete epic', severity: 'error' }));
+                }
+              }
+            }}
+          >
+            <Trash2 size={14} style={{ marginRight: '0.25rem', color: 'var(--color-danger)' }} /> Delete
+          </Button>
         </div>
       </div>
 

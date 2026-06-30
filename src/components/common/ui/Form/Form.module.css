@@ -1,7 +1,7 @@
 .fieldWrapper {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-1);
   margin-bottom: var(--spacing-4);
 }
 
@@ -13,36 +13,36 @@
 
 .required {
   color: var(--color-danger);
-  margin-left: 2px;
+  margin-left: var(--spacing-0-5);
 }
 
 .errorText {
   color: var(--color-danger);
   font-size: var(--font-size-xs);
-  margin-top: 4px;
+  margin-top: var(--spacing-1);
 }
 
 .helpText {
   color: var(--color-neutral-500);
   font-size: var(--font-size-xs);
-  margin-top: 4px;
+  margin-top: var(--spacing-1);
 }
 
 .input, .textarea, .select {
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--spacing-1-5) var(--spacing-2-5);
   border: 2px solid var(--color-neutral-200);
-  border-radius: var(--border-radius-base); /* 3px */
-  font-size: var(--font-size-sm); /* 13px/14px */
+  border-radius: var(--border-radius-xs);
+  font-size: var(--font-size-sm);
   font-family: inherit;
-  background-color: var(--color-neutral-50); /* #fafbfc */
+  background-color: var(--color-neutral-50);
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
   color: var(--color-neutral-900);
   outline: none;
 }
 
 .input:hover, .textarea:hover, .select:hover {
-  background-color: #ebecf0;
+  background-color: var(--color-field-hover);
 }
 
 .input:focus, .textarea:focus, .select:focus {
@@ -52,7 +52,7 @@
 
 .input.invalid, .textarea.invalid, .select.invalid {
   border-color: var(--color-danger);
-  background-color: #fff6f6;
+  background-color: var(--color-field-invalid-bg);
 }
 
 .input.invalid:focus, .textarea.invalid:focus, .select.invalid:focus {
@@ -78,13 +78,13 @@
   align-items: center;
   gap: var(--spacing-2);
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--spacing-1) 0;
 }
 
 .checkbox {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--border-radius-xs);
   border: 2px solid var(--color-neutral-300);
   cursor: pointer;
   accent-color: var(--color-primary);
@@ -109,8 +109,8 @@
 }
 
 .radio {
-  width: 14px;
-  height: 14px;
+  width: 0.875rem;
+  height: 0.875rem;
   cursor: pointer;
   accent-color: var(--color-primary);
   margin: 0;

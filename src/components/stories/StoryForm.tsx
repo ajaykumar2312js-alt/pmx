@@ -6,6 +6,7 @@ import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { AcceptanceCriteriaEditor, ACEntry } from './AcceptanceCriteriaEditor/AcceptanceCriteriaEditor';
 import { StoryPayload, Story } from '../../services/storyService';
 import { Priority } from '../../common/enums';
+import { KANBAN_STATUSES, DEFAULT_STATUS } from '../../common/kanbanStatuses';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface StoryFormProps {
@@ -27,13 +28,12 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
   const [priority, setPriority] = useState<Priority>(initialData?.priority ?? Priority.MEDIUM);
   const [assigneeId, setAssigneeId] = useState(initialData?.assigneeId ?? '');
   const [epicId, setEpicId] = useState(initialData?.epicId ?? '');
-  const [status, setStatus] = useState<string>(initialData?.status ?? 'TODO');
+  const [status, setStatus] = useState<string>(initialData?.status ?? DEFAULT_STATUS);
   const [ac, setAc] = useState<ACEntry[]>(
     initialData?.acceptanceCriteria ?? [{ id: uuidv4(), given: '', when: '', then: '' }]
   );
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [warnNoEpic, setWarnNoEpic] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -41,10 +41,11 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
     dispatch(fetchEpics({ projectId, params: { limit: 100 } }));
   }, [dispatch, projectId]);
 
-  const doSubmit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) { setErrorMsg('Title is required.'); return; }
     setSubmitting(true);
     setErrorMsg(null);
-    setWarnNoEpic(false);
     try {
       await onSubmit({
         title, asA, iWant, soThat,
@@ -61,24 +62,9 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) { setErrorMsg('Title is required.'); return; }
-    // §10.9 — warn-but-allow without epic
-    if (!epicId && !warnNoEpic) { setWarnNoEpic(true); return; }
-    await doSubmit();
-  };
-
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {errorMsg && <Alert severity="error" message={errorMsg} />}
-
-      {warnNoEpic && (
-        <Alert
-          severity="warning"
-          message="This story has no Epic assigned. Unlinked stories may be harder to track. Continue without an Epic?"
-        />
-      )}
 
       <Input label="Title *" value={title} onChange={e => setTitle(e.target.value)} required />
 
@@ -98,7 +84,7 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
         <Select
           label="Epic"
           value={epicId}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setEpicId(e.target.value); setWarnNoEpic(false); }}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEpicId(e.target.value)}
           options={[
             { label: 'No Epic', value: '' },
             ...epics.map((ep: { id: string; name: string }) => ({ label: ep.name, value: ep.id })),
@@ -127,12 +113,7 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
             label="Status"
             value={status}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setStatus(e.target.value)}
-            options={[
-              { label: 'To Do', value: 'TODO' },
-              { label: 'In Progress', value: 'IN_PROGRESS' },
-              { label: 'In Review', value: 'IN_REVIEW' },
-              { label: 'Done', value: 'DONE' },
-            ]}
+            options={KANBAN_STATUSES.map(s => ({ label: s.label, value: s.id }))}
           />
         )}
       </div>
@@ -142,10 +123,7 @@ export const StoryForm: React.FC<StoryFormProps> = ({ projectId, initialData, on
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
         <Button variant="ghost" type="button" onClick={onCancel} disabled={submitting}>Cancel</Button>
-        {warnNoEpic
-          ? <Button variant="primary" type="submit" loading={submitting}>Continue Without Epic</Button>
-          : <Button variant="primary" type="submit" loading={submitting}>{initialData?.id ? 'Save Changes' : 'Create Story'}</Button>
-        }
+        <Button variant="primary" type="submit" loading={submitting}>{initialData?.id ? 'Save Changes' : 'Create Story'}</Button>
       </div>
     </form>
   );
