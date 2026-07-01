@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { fetchTasks, selectTasks, selectTaskMeta, selectTaskStatus } from '../../redux/slices/taskSlice';
-import { selectActiveProject } from '../../redux/slices/projectSlice';
 import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { Table, Button, Avatar, Select, Column, Pagination, Input, ItemStatusDropdown } from '../common/ui';
@@ -21,7 +20,6 @@ interface TaskListProps {
 }
 
 export const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
-  const activeProject = useAppSelector(selectActiveProject);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const tasks = useAppSelector(selectTasks);

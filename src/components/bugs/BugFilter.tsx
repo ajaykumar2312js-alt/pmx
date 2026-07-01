@@ -24,9 +24,6 @@ interface BugFilterProps {
   users: { id: string; firstName: string; lastName: string }[];
 }
 
-import { useAppSelector } from '../../redux/hooks';
-import { selectActiveProject } from '../../redux/slices/projectSlice';
-
 export const BugFilter: React.FC<BugFilterProps> = ({
   search,
   onSearchChange,
@@ -41,7 +38,6 @@ export const BugFilter: React.FC<BugFilterProps> = ({
   onAssigneeChange,
   users,
 }) => {
-  const activeProject = useAppSelector(selectActiveProject);
   return (
     <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap', alignItems: 'flex-end', background: 'white', padding: '1rem', borderRadius: 8, border: '1px solid var(--color-neutral-200)' }}>
       <div style={{ flex: 1, minWidth: 200 }}>

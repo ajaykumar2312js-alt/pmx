@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { fetchStories, selectStories, selectStoryStatus, selectStoryMeta, deleteStory } from '../../redux/slices/storySlice';
-import { selectActiveProject } from '../../redux/slices/projectSlice';
 import { fetchEpics, selectEpics } from '../../redux/slices/epicSlice';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { Table, Spinner, Alert, Pagination, Button, Select, Input, Avatar, Column, ItemStatusDropdown } from '../common';
@@ -24,7 +23,6 @@ interface StoryListProps {
 }
 
 export const StoryList: React.FC<StoryListProps> = ({ projectId, onCreateStory }) => {
-  const activeProject = useAppSelector(selectActiveProject);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const stories = useAppSelector(selectStories);

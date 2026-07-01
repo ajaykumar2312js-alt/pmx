@@ -166,7 +166,7 @@ const ListPage: React.FC = () => {
         <div className={`${styles.childRow} ${styles.taskRow}`} onClick={() => toggleStory(story.id)}>
           <div className={styles.titleArea}>
             <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox checked={selectedIds.includes(story.id)} onChange={() => handleToggleSelection(story.id)} />
+              <Checkbox label="" checked={selectedIds.includes(story.id)} onChange={() => handleToggleSelection(story.id)} />
             </div>
             <ChevronRight size={14} className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`} />
             <FileText size={16} style={{ color: 'var(--color-primary)', marginRight: '6px' }} />
@@ -226,7 +226,7 @@ const ListPage: React.FC = () => {
                 <div key={subtask.id} className={styles.subtaskRow}>
                   <div className={styles.subtaskTitleArea}>
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-                      <Checkbox checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
+                      <Checkbox label="" checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
                     </div>
                     <CornerDownRight size={14} style={{ color: 'var(--color-neutral-400)' }} />
                     <span className={styles.titleText} title={subtask.title}>{subtask.title}</span>
@@ -282,7 +282,7 @@ const ListPage: React.FC = () => {
         <div className={`${styles.childRow} ${styles.taskRow}`} onClick={() => toggleTask(task.id)}>
           <div className={styles.titleArea}>
             <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox checked={selectedIds.includes(task.id)} onChange={() => handleToggleSelection(task.id)} />
+              <Checkbox label="" checked={selectedIds.includes(task.id)} onChange={() => handleToggleSelection(task.id)} />
             </div>
             <ChevronRight size={14} className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`} />
             <CheckSquare size={16} style={{ color: 'var(--color-success)', marginRight: '6px' }} />
@@ -340,7 +340,7 @@ const ListPage: React.FC = () => {
                 <div key={subtask.id} className={styles.subtaskRow}>
                   <div className={styles.subtaskTitleArea}>
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-                      <Checkbox checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
+                      <Checkbox label="" checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
                     </div>
                     <CornerDownRight size={14} style={{ color: 'var(--color-neutral-400)' }} />
                     <span className={styles.titleText} title={subtask.title}>{subtask.title}</span>
@@ -396,7 +396,7 @@ const ListPage: React.FC = () => {
         <div className={`${styles.childRow} ${styles.taskRow}`} onClick={() => toggleBug(bug.id)}>
           <div className={styles.titleArea}>
             <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center' }}>
-              <Checkbox checked={selectedIds.includes(bug.id)} onChange={() => handleToggleSelection(bug.id)} />
+              <Checkbox label="" checked={selectedIds.includes(bug.id)} onChange={() => handleToggleSelection(bug.id)} />
             </div>
             <ChevronRight size={14} className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`} />
             <BugIcon size={16} style={{ color: 'var(--color-danger)', marginRight: '6px' }} />
@@ -456,7 +456,7 @@ const ListPage: React.FC = () => {
                 <div key={subtask.id} className={styles.subtaskRow}>
                   <div className={styles.subtaskTitleArea}>
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-                      <Checkbox checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
+                      <Checkbox label="" checked={selectedIds.includes(subtask.id)} onChange={() => handleToggleSelection(subtask.id)} />
                     </div>
                     <CornerDownRight size={14} style={{ color: 'var(--color-neutral-400)' }} />
                     <span className={styles.titleText} title={subtask.title}>{subtask.title}</span>
