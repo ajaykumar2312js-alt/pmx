@@ -4,7 +4,7 @@ import { fetchBugDetail, selectCurrentBug, selectBugDetailStatus, updateBug, del
 import { Spinner, Alert, CommentThread, Button } from '../common';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
 import { SubtaskList } from '../subtasks/SubtaskList';
-import { InlineEdit, WorkflowStatusDropdown } from '../common/ui';
+import { InlineEdit, WorkflowStatusDropdown, PriorityDropdown } from '../common/ui';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { Severity } from '../../common/enums';
 import { BugPayload } from '../../services/bugService';
@@ -48,12 +48,6 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
     { label: 'Medium', value: 'MEDIUM' },
     { label: 'High', value: 'HIGH' },
     { label: 'Critical', value: 'CRITICAL' },
-  ];
-  const priorityOptions = [
-    { label: 'Critical', value: 'CRITICAL' },
-    { label: 'High',     value: 'HIGH'     },
-    { label: 'Medium',   value: 'MEDIUM'   },
-    { label: 'Low',      value: 'LOW'      },
   ];
 
   return (
@@ -114,12 +108,9 @@ export const BugDetailDrawer: React.FC<BugDetailDrawerProps> = ({ bugId, onClose
                   />
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--color-neutral-500)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  Priority: 
-                  <InlineEdit
+                  <PriorityDropdown
                     value={bug.priority}
-                    onSave={(val) => handleFieldSave('priority', val)}
-                    type="select"
-                    options={priorityOptions}
+                    onChange={(newVal) => handleFieldSave('priority', newVal)}
                   />
                 </span>
               </div>

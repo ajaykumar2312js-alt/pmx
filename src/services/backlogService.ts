@@ -11,12 +11,13 @@ export interface BacklogItem {
   description?: string;
   type?: WorkItemType;
   priority: Priority;
-  businessValue?: number;
   status: BacklogItemStatus;
   sprintId?: string;
   assigneeId?: string;
   assignee?: { id: string; firstName: string; lastName: string; avatarUrl?: string };
   rank: string; // Lexicographical ordering rank
+  refinedItemId?: string;
+  refinedItemType?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,7 +36,6 @@ export interface CreateBacklogItemPayload {
   title: string;
   description?: string;
   priority: Priority;
-  businessValue?: number;
   status: BacklogItemStatus;
   type?: WorkItemType;
 }
@@ -44,9 +44,8 @@ export interface UpdateBacklogItemPayload {
   title?: string;
   description?: string;
   priority?: Priority;
-  businessValue?: number;
   status?: BacklogItemStatus;
-  type?: WorkItemType;
+  type?: WorkItemType | null;
 }
 
 export interface ReorderPayload {

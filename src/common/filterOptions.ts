@@ -24,7 +24,6 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
   [Priority.LOW]: 'Low',
   [Priority.MEDIUM]: 'Medium',
   [Priority.HIGH]: 'High',
-  [Priority.CRITICAL]: 'Critical',
 };
 
 const allOption = (label: string): FilterOption => ({ value: '', label });

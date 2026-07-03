@@ -17,7 +17,6 @@ export const EditBacklogItemModal: React.FC<EditBacklogItemModalProps> = ({ item
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description || '');
   const [priority, setPriority] = useState<Priority>(item.priority);
-  const [businessValue, setBusinessValue] = useState<string>(item.businessValue ? item.businessValue.toString() : '');
   const [status, setStatus] = useState<BacklogItemStatus>(item.status);
   const [type, setType] = useState<WorkItemType | ''>(item.type || '');
   
@@ -29,13 +28,6 @@ export const EditBacklogItemModal: React.FC<EditBacklogItemModalProps> = ({ item
   const validate = () => {
     const errors: Record<string, string> = {};
     if (!title.trim()) errors.title = 'Title is required';
-    
-    if (businessValue) {
-      const bv = parseInt(businessValue, 10);
-      if (isNaN(bv) || bv < 1 || bv > 100) {
-        errors.businessValue = 'Business value must be between 1 and 100';
-      }
-    }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -56,7 +48,6 @@ export const EditBacklogItemModal: React.FC<EditBacklogItemModalProps> = ({ item
             title,
             description,
             priority,
-            businessValue: businessValue ? parseInt(businessValue, 10) : undefined,
             ...(typeSpecificPayload || {})
           }
         })).unwrap();
@@ -69,9 +60,8 @@ export const EditBacklogItemModal: React.FC<EditBacklogItemModalProps> = ({ item
             title,
             description,
             priority,
-            businessValue: businessValue ? parseInt(businessValue, 10) : undefined,
             status,
-            type: type || undefined,
+            type: type !== '' ? type : null,
           }
         })).unwrap();
         dispatch(enqueueToast({ message: 'Backlog item updated', severity: 'success' }));
@@ -134,24 +124,9 @@ export const EditBacklogItemModal: React.FC<EditBacklogItemModalProps> = ({ item
                 { label: 'Low', value: Priority.LOW },
                 { label: 'Medium', value: Priority.MEDIUM },
                 { label: 'High', value: Priority.HIGH },
-                { label: 'Critical', value: Priority.CRITICAL },
               ]}
             />
           </div>
-          <div style={{ flex: 1 }}>
-            <Input 
-              label="Business Value (1-100)" 
-              type="number"
-              min={1}
-              max={100}
-              value={businessValue} 
-              onChange={(e) => setBusinessValue(e.target.value)} 
-              error={fieldErrors.businessValue} 
-            />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1 }}>
             <Select 
               label="Type (Label)" 

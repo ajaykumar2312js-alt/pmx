@@ -20,6 +20,10 @@ export const CommentThread: React.FC<CommentThreadProps> = ({ parentType, parent
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
+    if (!parentId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const { items } = await commentService.list(parentType, parentId);
@@ -39,7 +43,7 @@ export const CommentThread: React.FC<CommentThreadProps> = ({ parentType, parent
 
   const handleAdd = async () => {
     const trimmed = body.trim();
-    if (!trimmed) return;
+    if (!trimmed || !parentId) return;
 
     // Optimistic add with rollback on failure.
     const optimistic: Comment = {

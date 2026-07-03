@@ -105,7 +105,6 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({
           <option value={Priority.LOW}>Low</option>
           <option value={Priority.MEDIUM}>Medium</option>
           <option value={Priority.HIGH}>High</option>
-          <option value={Priority.CRITICAL}>Critical</option>
         </select>
 
         <select 

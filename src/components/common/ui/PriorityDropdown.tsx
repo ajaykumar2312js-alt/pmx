@@ -1,32 +1,40 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
+import { Priority } from '../../../common/enums';
 
-export interface StatusOption {
+export interface PriorityOption {
   label: string;
-  value: string;
+  value: Priority;
 }
 
-export interface StatusDropdownProps {
-  value: string;
-  options: StatusOption[];
-  onChange: (newValue: string) => void;
-  /** Custom mapping from status value to colors. Defaults to neutral gray. */
-  colorMap?: Record<string, { bg: string; color: string }>;
+export interface PriorityDropdownProps {
+  value: Priority | string;
+  onChange: (newValue: Priority) => void;
   disabled?: boolean;
   size?: 'sm' | 'md';
 }
 
+const OPTIONS: PriorityOption[] = [
+  { label: 'Low', value: Priority.LOW },
+  { label: 'Medium', value: Priority.MEDIUM },
+  { label: 'High', value: Priority.HIGH },
+];
+
+const COLOR_MAP: Record<string, { bg: string; color: string }> = {
+  [Priority.LOW]: { bg: 'var(--color-status-green-bg, #e3fcef)', color: 'var(--color-status-green-fg, #006644)' },
+  [Priority.MEDIUM]: { bg: 'var(--color-status-yellow-bg, #fffae6)', color: 'var(--color-status-yellow-fg, #ff8b00)' },
+  [Priority.HIGH]: { bg: 'var(--color-status-red-bg, #ffebe6)', color: 'var(--color-status-red-fg, #de350b)' },
+};
+
 /**
- * A modern, custom interactive dropdown that renders as a premium status pill.
- * Clicking it toggles a sleek, animated popover menu for selecting status.
+ * A modern, custom interactive dropdown that renders as a premium priority pill.
+ * Clicking it toggles a sleek, animated popover menu for selecting priority.
  * Rendered via React Portal to prevent overflow clipping by parent containers.
  */
-export const StatusDropdown: React.FC<StatusDropdownProps> = ({
+export const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
   value,
-  options,
   onChange,
-  colorMap = {},
   disabled = false,
   size = 'md',
 }) => {
@@ -36,11 +44,12 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
 
-  // Fallback default style if color map is missing the specific status
-  const currentColors = colorMap[value] || { bg: 'var(--color-status-neutral-bg, #dfe1e6)', color: 'var(--color-status-neutral-fg, #42526e)' };
+  // Map value to priority type
+  const normalizedValue = String(value).toUpperCase() as Priority;
+  const currentColors = COLOR_MAP[normalizedValue] || COLOR_MAP[Priority.LOW];
   
   // Find display label for the pill
-  const currentOption = options.find((o) => String(o.value) === String(value));
+  const currentOption = OPTIONS.find((o) => o.value === normalizedValue);
   const displayLabel = currentOption ? currentOption.label : value;
 
   // Handle click outside to close
@@ -102,7 +111,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
     }
   };
 
-  const handleSelect = (newValue: string, e: React.MouseEvent) => {
+  const handleSelect = (newValue: Priority, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onChange(newValue);
@@ -116,7 +125,7 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
         position: 'absolute',
         top: `${coords.top + 6}px`,
         left: `${coords.left}px`,
-        minWidth: '170px',
+        minWidth: '150px',
         backgroundColor: 'var(--color-neutral-50, #ffffff)',
         border: '1px solid var(--border-color, #e4e4e7)',
         borderRadius: 'var(--border-radius-base, 8px)',
@@ -131,9 +140,9 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
         background: 'rgba(255, 255, 255, 0.95)',
       }}
     >
-      {options.map((opt) => {
-        const optColors = colorMap[opt.value] || { bg: '#dfe1e6', color: '#42526e' };
-        const isSelected = String(opt.value) === String(value);
+      {OPTIONS.map((opt) => {
+        const optColors = COLOR_MAP[opt.value];
+        const isSelected = opt.value === normalizedValue;
 
         return (
           <button
@@ -245,10 +254,8 @@ export const StatusDropdown: React.FC<StatusDropdownProps> = ({
         />
       </button>
 
-      {/* Render popover menu via Portal so it escapes overflow constraints */}
       {isOpen && createPortal(menuElement, document.body)}
       
-      {/* Dynamic slideDown keyframe animation styles */}
       <style>{`
         @keyframes fadeInSlideDown {
           from {

@@ -606,30 +606,26 @@ const SprintsPage: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <Tag status={selectedSprint.status} />
-                    {!isLocked && (
-                      <>
-                        <Button variant="secondary" onClick={openEditModal} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
-                          Edit Details
-                        </Button>
-                        <Button 
-                          variant="danger" 
-                          onClick={async () => {
-                            if (window.confirm(`Are you sure you want to delete Sprint "${selectedSprint.name}"?`)) {
-                              try {
-                                await dispatch(deleteSprint(selectedSprint.id)).unwrap();
-                                dispatch(enqueueToast({ message: 'Sprint deleted successfully.', severity: 'success' }));
-                                setSelectedSprintId(null);
-                              } catch (err: unknown) {
-                                dispatch(enqueueToast({ message: (err as string) || 'Failed to delete sprint', severity: 'error' }));
-                              }
-                            }
-                          }}
-                          style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    )}
+                    <Button variant="secondary" onClick={openEditModal} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+                      Edit Details
+                    </Button>
+                    <Button 
+                      variant="danger" 
+                      onClick={async () => {
+                        if (window.confirm(`Are you sure you want to delete Sprint "${selectedSprint.name}"?`)) {
+                          try {
+                            await dispatch(deleteSprint(selectedSprint.id)).unwrap();
+                            dispatch(enqueueToast({ message: 'Sprint deleted successfully.', severity: 'success' }));
+                            setSelectedSprintId(null);
+                          } catch (err: unknown) {
+                            dispatch(enqueueToast({ message: (err as string) || 'Failed to delete sprint', severity: 'error' }));
+                          }
+                        }
+                      }}
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -749,7 +745,6 @@ const SprintsPage: React.FC = () => {
                         }}
                       >
                         <option value="">All Priorities</option>
-                        <option value={Priority.CRITICAL}>Critical</option>
                         <option value={Priority.HIGH}>High</option>
                         <option value={Priority.MEDIUM}>Medium</option>
                         <option value={Priority.LOW}>Low</option>
@@ -1021,8 +1016,7 @@ const SprintsPage: React.FC = () => {
                   options={[
                     { label: 'Low', value: Priority.LOW },
                     { label: 'Medium', value: Priority.MEDIUM },
-                    { label: 'High', value: Priority.HIGH },
-                    { label: 'Critical', value: Priority.CRITICAL }
+                    { label: 'High', value: Priority.HIGH }
                   ]}
                 />
               </div>
@@ -1153,8 +1147,7 @@ const SprintsPage: React.FC = () => {
                   options={[
                     { label: 'Low', value: Priority.LOW },
                     { label: 'Medium', value: Priority.MEDIUM },
-                    { label: 'High', value: Priority.HIGH },
-                    { label: 'Critical', value: Priority.CRITICAL }
+                    { label: 'High', value: Priority.HIGH }
                   ]}
                 />
               </div>

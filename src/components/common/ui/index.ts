@@ -28,3 +28,4 @@ export * from './InlineEdit';
 export * from './StatusDropdown';
 export * from './WorkflowStatusDropdown';
 export * from './ItemStatusDropdown';
+export * from './PriorityDropdown';

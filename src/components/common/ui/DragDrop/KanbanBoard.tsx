@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -30,6 +31,20 @@ interface KanbanBoardProps<T> {
   renderColumn?: (column: BoardColumn<T>, children: React.ReactNode) => React.ReactNode;
   appendContent?: React.ReactNode;
 }
+
+interface ColumnContainerProps {
+  colId: string;
+  children: React.ReactNode;
+}
+
+const ColumnContainer: React.FC<ColumnContainerProps> = ({ colId, children }) => {
+  const { setNodeRef } = useDroppable({ id: colId });
+  return (
+    <div ref={setNodeRef} style={{ minHeight: '200px' }}>
+      {children}
+    </div>
+  );
+};
 
 export function KanbanBoard<T>({ columns, keyExtractor, onMove, renderCard, renderColumn, appendContent }: KanbanBoardProps<T>) {
   const sensors = useSensors(
@@ -73,13 +88,13 @@ export function KanbanBoard<T>({ columns, keyExtractor, onMove, renderCard, rend
         {columns.map((col) => {
           const content = (
             <SortableContext key={col.id} id={col.id} items={col.items.map(keyExtractor)} strategy={verticalListSortingStrategy}>
-              <div style={{ minHeight: '200px' }}>
+              <ColumnContainer colId={col.id}>
                 {col.items.map((item) => (
                   <SortableItem key={keyExtractor(item)} id={keyExtractor(item)}>
                     {renderCard(item)}
                   </SortableItem>
                 ))}
-              </div>
+              </ColumnContainer>
             </SortableContext>
           );
 

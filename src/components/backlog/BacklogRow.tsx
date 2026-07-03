@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Checkbox, Button } from '../common';
+import { Badge, Checkbox, Button, StatusDropdown } from '../common';
 import { BacklogItem, BacklogItemStatus } from '../../services/backlogService';
 import { Priority } from '../../common/enums';
 import { useNavigate } from 'react-router-dom';
@@ -55,45 +55,40 @@ export const BacklogRow: React.FC<BacklogRowProps> = ({ item, isSelected, onTogg
         <Badge level={item.priority} />
       </div>
 
-      <div>
-        <select 
-          value={item.status} 
-          onChange={(e) => onStatusChange(item.id, e.target.value as BacklogItemStatus)}
-          style={{
-            padding: '0.25rem 0.5rem',
-            borderRadius: 'var(--border-radius-md)',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            border: '1px solid var(--color-neutral-300)',
-            backgroundColor: 'var(--color-neutral-100)',
-            color: 'var(--color-neutral-700)',
-            cursor: 'pointer'
+        <StatusDropdown
+          value={item.status}
+          onChange={(newVal) => onStatusChange(item.id, newVal as BacklogItemStatus)}
+          options={[
+            { label: 'New', value: 'New' },
+            { label: 'Ready', value: 'Ready' },
+            { label: 'Closed', value: 'Closed' }
+          ]}
+          colorMap={{
+            New: { bg: 'var(--color-status-neutral-bg)', color: 'var(--color-status-neutral-fg)' },
+            Ready: { bg: 'var(--color-status-blue-bg)', color: 'var(--color-status-blue-fg)' },
+            Closed: { bg: 'var(--color-status-green-bg)', color: 'var(--color-status-green-fg)' }
           }}
-        >
-          <option value="New">New</option>
-          <option value="Ready">Ready</option>
-          <option value="Closed">Closed</option>
-        </select>
-      </div>
+          size="sm"
+        />
 
       <div style={{ display: 'flex', gap: '0.5rem' }}>
-        {item.type ? (
-          <Button 
-            variant="secondary" 
-            size="sm" 
+        {item.refinedItemId ? (
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => {
-              if (item.type === 'STORY') navigate(RoutePaths.STORY_DETAIL(item.id));
-              else if (item.type === 'TASK') navigate(RoutePaths.TASK_DETAIL(item.id));
-              else if (item.type === 'BUG') navigate(RoutePaths.BUG_DETAIL(item.id));
-              else if (item.type === 'EPIC') navigate(RoutePaths.EPIC_DETAIL(item.id));
+              if (item.refinedItemType === 'STORY') navigate(RoutePaths.STORY_DETAIL(item.refinedItemId!));
+              else if (item.refinedItemType === 'TASK') navigate(RoutePaths.TASK_DETAIL(item.refinedItemId!));
+              else if (item.refinedItemType === 'BUG') navigate(RoutePaths.BUG_DETAIL(item.refinedItemId!));
+              else if (item.refinedItemType === 'EPIC') navigate(RoutePaths.EPIC_DETAIL(item.refinedItemId!));
             }}
           >
-            Edit
+            View
           </Button>
         ) : (
-          <Button 
-            variant="secondary" 
-            size="sm" 
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onEditClick(item.id)}
             disabled={item.status === 'Closed'}
           >

@@ -4,7 +4,7 @@ import { fetchStoryDetail, selectCurrentStory, selectStoryDetailStatus, updateSt
 import { Card, Spinner, Alert, Button } from '../common';
 import { AcceptanceCriteriaEditor } from './AcceptanceCriteriaEditor/AcceptanceCriteriaEditor';
 import { fetchUsers, selectUsers } from '../../redux/slices/userSlice';
-import { InlineEdit, WorkflowStatusDropdown } from '../common/ui';
+import { InlineEdit, WorkflowStatusDropdown, PriorityDropdown } from '../common/ui';
 import { enqueueToast } from '../../redux/slices/uiSlice';
 import { ACEntry, StoryPayload } from '../../services/storyService';
 import { useNavigate } from 'react-router-dom';
@@ -53,13 +53,6 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ storyId }) => {
   };
 
   const userOptions = users.map(u => ({ label: `${u.firstName} ${u.lastName}`, value: u.id }));
-  const priorityOptions = [
-    { label: 'Highest', value: 'Highest' },
-    { label: 'High', value: 'High' },
-    { label: 'Medium', value: 'Medium' },
-    { label: 'Low', value: 'Low' },
-    { label: 'Lowest', value: 'Lowest' },
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -138,11 +131,9 @@ export const StoryDetail: React.FC<StoryDetailProps> = ({ storyId }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '1px solid var(--color-neutral-200)', paddingLeft: '2rem', fontSize: '0.875rem' }}>
             <div>
               <div style={{ fontWeight: 600, color: 'var(--color-neutral-600)', marginBottom: '0.25rem' }}>Priority</div>
-              <InlineEdit
+              <PriorityDropdown
                 value={story.priority}
-                onSave={(val) => handleFieldSave('priority', val)}
-                type="select"
-                options={priorityOptions}
+                onChange={(newVal) => handleFieldSave('priority', newVal)}
               />
             </div>
             <div>

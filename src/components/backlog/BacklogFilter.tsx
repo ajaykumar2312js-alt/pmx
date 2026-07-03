@@ -63,7 +63,6 @@ export const BacklogFilter: React.FC<BacklogFilterProps> = ({ onFilterChange }) 
             { label: 'Low', value: Priority.LOW },
             { label: 'Medium', value: Priority.MEDIUM },
             { label: 'High', value: Priority.HIGH },
-            { label: 'Critical', value: Priority.CRITICAL },
           ]}
         />
       </div>

@@ -16,7 +16,6 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>(Priority.MEDIUM);
-  const [businessValue, setBusinessValue] = useState<string>('');
   const [type, setType] = useState<WorkItemType | ''>('');
   
   const [submitting, setSubmitting] = useState(false);
@@ -26,13 +25,6 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
   const validate = () => {
     const errors: Record<string, string> = {};
     if (!title.trim()) errors.title = 'Title is required';
-    
-    if (businessValue) {
-      const bv = parseInt(businessValue, 10);
-      if (isNaN(bv) || bv < 1 || bv > 100) {
-        errors.businessValue = 'Business value must be between 1 and 100';
-      }
-    }
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -51,7 +43,6 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
           title,
           description,
           priority,
-          businessValue: businessValue ? parseInt(businessValue, 10) : undefined,
           status: 'New' as BacklogItemStatus,
           type: type || undefined,
         }
@@ -97,7 +88,6 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
                 { label: 'Low', value: Priority.LOW },
                 { label: 'Medium', value: Priority.MEDIUM },
                 { label: 'High', value: Priority.HIGH },
-                { label: 'Critical', value: Priority.CRITICAL },
               ]}
             />
           </div>
@@ -113,17 +103,6 @@ export const CreateBacklogItemModal: React.FC<CreateBacklogItemModalProps> = ({ 
                 { label: 'Task', value: WorkItemType.TASK },
                 { label: 'Bug', value: WorkItemType.BUG },
               ]}
-            />
-          </div>
-          <div style={{ flex: 1 }}>
-            <Input 
-              label="Business Value (1-100)" 
-              type="number"
-              min={1}
-              max={100}
-              value={businessValue} 
-              onChange={(e) => setBusinessValue(e.target.value)} 
-              error={fieldErrors.businessValue} 
             />
           </div>
         </div>
